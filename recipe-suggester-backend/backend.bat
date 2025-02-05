@@ -1,23 +1,32 @@
 @echo off
 echo Starting Backend Setup...
 
-:: Check if venv exists
+:: Step 1: Check if venv exists, if not, create it
 if not exist venv (
-    echo Error: Virtual environment not found. Run "python -m venv venv" first.
-    exit /b
+    echo Creating virtual environment...
+    python -m venv venv
 )
 
-:: Activate the virtual environment
+:: Step 2: Activate the virtual environment
 call venv\Scripts\activate
 
-:: Install dependencies
+:: Step 3: Generate requirements.txt (if missing)
+if not exist requirements.txt (
+    echo Generating requirements.txt...
+    pip freeze > requirements.txt
+)
+
+:: Step 4: Install all required dependencies
+echo Installing dependencies...
+pip install --upgrade pip
 pip install -r requirements.txt
 
-:: Run database migrations
+:: Step 5: Run database migrations
+echo Running migrations...
 python manage.py makemigrations
 python manage.py migrate
 
-:: Start Django server
+:: Step 6: Start Django server
 echo Starting Django Backend...
 python manage.py runserver
 
