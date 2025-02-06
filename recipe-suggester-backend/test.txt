@@ -23,11 +23,6 @@ if errorlevel 1 (
     echo djangorestframework is not installed. Installing now...
     venv\Scripts\python -m pip install djangorestframework
 )
-venv\Scripts\python -m pip show django-cors-headers >nul 2>&1
-if errorlevel 1 (
-    echo django-cors-headers is not installed. Installing now...
-    venv\Scripts\python -m pip install django-cors-headers
-)
 :: Step 3: Install all required dependencies
 if not exist requirements.txt (
     echo Generating requirements.txt...
