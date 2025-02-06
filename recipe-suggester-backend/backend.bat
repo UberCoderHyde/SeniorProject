@@ -41,9 +41,9 @@ venv\Scripts\python manage.py makemigrations
 venv\Scripts\python manage.py migrate
 
 :: Step 6: Start Django server
+echo run venv\Scripts\activate in your terminal to do anything else with the terminal
 echo Starting Django Backend...
 venv\Scripts\python manage.py runserver
-echo run venv\Scripts\activate in your terminal to do anything else with the terminal
 
 pause
 

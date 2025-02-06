@@ -1,6 +1,7 @@
 @echo off
-echo Starting Frontend Setup...
-
+echo ==============================
+echo  Setting up Frontend Environment
+echo ==============================
 :: Step 1: Navigate to the frontend directory
 cd /d %~dp0
 
@@ -18,7 +19,9 @@ if %errorlevel% neq 0 (
 call npm install
 
 :: Step 4: Start the React frontend server and KEEP THE TERMINAL OPEN
-echo Starting React Frontend...
+echo ==============================
+echo  Starting React Frontend...
+echo ==============================
 call npm run dev
 :: Keep the script open after running npm
 echo Frontend is running. Keep this window open if you need logs.
