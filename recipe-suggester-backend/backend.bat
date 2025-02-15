@@ -35,15 +35,13 @@ if not exist requirements.txt (
 )
 
 venv\Scripts\python -m pip install -r requirements.txt
-
-:: Step 5: Run database migrations
-venv\Scripts\python manage.py makemigrations
-venv\Scripts\python manage.py migrate
-
 :: Step 6: Start Django server
 echo run venv\Scripts\activate in your terminal to do anything else with the terminal
 echo Starting Django Backend...
+
 venv\Scripts\python manage.py runserver
+echo to start venv in terminal use: venv\Scripts\activate
+echo if there is a error run in venv python -m pip install -r requirements.txt
 
 pause
 
