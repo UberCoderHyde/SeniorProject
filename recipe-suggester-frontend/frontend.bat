@@ -14,7 +14,9 @@ if %errorlevel% neq 0 (
     pause
     exit
 )
-
+if exist node_modules rmdir /s /q node_modules
+if exist package-lock.json del package-lock.json
+npm cache clean --force
 :: Step 3: Install dependencies
 call npm install
 

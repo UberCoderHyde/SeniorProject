@@ -19,7 +19,7 @@ const SearchBar = ({ onSearch }) => {
       />
       <button
         type="submit"
-        className="bg-primary text-white rounded-r px-4 py-2 hover:bg-highlight transition"
+        className="ml-2 bg-primary text-white rounded-r px-4 py-2 hover:bg-highlight transition"
       >
         Search
       </button>

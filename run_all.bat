@@ -8,11 +8,11 @@ cd /d %~dp0
 
 :: Step 2: Start Backend in a New Window
 echo Starting Backend...
-start "Backend" cmd /k "cd recipe-suggester-backend && call setup_backend.bat"
+start "Backend" cmd /k "cd recipe-suggester-backend && call backend.bat"
 
 :: Step 3: Start Frontend in a New Window
 echo Starting Frontend...
-start "Frontend" cmd /k "cd recipe-suggester-frontend && call setup_frontend.bat"
+start "Frontend" cmd /k "cd recipe-suggester-frontend && call frontend.bat"
 
 :: Step 4: Keep Window Open for Control
 echo ===================================
