@@ -15,7 +15,7 @@ const SearchBar = ({ onSearch }) => {
         placeholder="Search recipes..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="border border-gray-300 rounded-l px-4 py-2 focus:outline-none focus:ring-2 focus:ring-accent"
+        className="border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-accent"
       />
       <button
         type="submit"

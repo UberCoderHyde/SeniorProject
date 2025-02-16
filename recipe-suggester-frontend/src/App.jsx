@@ -17,7 +17,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Navbar />
-        <main className="min-h-screen">
+        <main className="min-h-screen bg-tertiary">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/recipes" element={<Recipes />} />
