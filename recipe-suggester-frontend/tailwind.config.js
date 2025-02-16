@@ -11,7 +11,7 @@ export default {
         secondary: "#FFA07A",
         tertiary: "#000000",
         accent: "#20B2AA",
-        highlight: "#32CD32",
+        highlight: "#329932",
       },
     },
   },
