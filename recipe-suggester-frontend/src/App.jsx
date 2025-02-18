@@ -11,6 +11,8 @@ import RecipeDetail from "./pages/RecipeDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import Ingredients from "./pages/Ingredients";
+import MyPantry from "./pages/MyPantry";
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/pantry" element={<MyPantry />} />
+            <Route path="/ingredients" element={<Ingredients />} />
           </Routes>
         </main>
         <Footer />
