@@ -7,34 +7,6 @@ if not exist venv (
     python -m venv venv
 )
 
-:: Step 2: Ensure pip is up to date
-venv\Scripts\python -m ensurepip --default-pip
-venv\Scripts\python -m pip install --upgrade pip setuptools wheel
-
-
-:: Step 4: Check if Django is installed
-venv\Scripts\python -m pip show django >nul 2>&1
-if errorlevel 1 (
-    echo Django is not installed. Installing now...
-    venv\Scripts\python -m pip install django
-)
-venv\Scripts\python -m pip show djangorestframework >nul 2>&1
-if errorlevel 1 (
-    echo djangorestframework is not installed. Installing now...
-    venv\Scripts\python -m pip install djangorestframework
-)
-venv\Scripts\python -m pip show django-cors-headers >nul 2>&1
-if errorlevel 1 (
-    echo django-cors-headers is not installed. Installing now...
-    venv\Scripts\python -m pip install django-cors-headers
-)
-:: Step 3: Install all required dependencies
-if not exist requirements.txt (
-    echo Generating requirements.txt...
-    venv\Scripts\python -m pip freeze > requirements.txt
-)
-
-venv\Scripts\python -m pip install -r requirements.txt
 :: Step 6: Start Django server
 echo run venv\Scripts\activate in your terminal to do anything else with the terminal
 echo Starting Django Backend...
