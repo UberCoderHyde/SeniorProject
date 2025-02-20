@@ -13,11 +13,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Call loginUser only once
       const data = await loginUser({ email, password });
       console.log("Logged in successfully", data);
-      const userData = await loginUser({ email, password });
-      login(userData);
-      navigate("/"); // redirect to homepage on success
+      login(data.user || { email, username: email }, data.token);
+      navigate("/");
     } catch (err) {
       setError("Login failed. Please check your credentials.");
       console.error(err);
@@ -27,8 +27,12 @@ const Login = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-tertiary p-6">
       <h1 className="text-3xl font-bold text-primary mb-6">Login</h1>
-      <form onSubmit={handleSubmit} className="w-full max-w-md bg-white p-6 rounded shadow">
-        <label className="block mb-2">
+      {error && <p className="text-red-600">{error}</p>}
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-md bg-white p-6 rounded shadow"
+      >
+        <label className="block mb-4">
           <span className="text-gray-700">Email</span>
           <input
             type="email"

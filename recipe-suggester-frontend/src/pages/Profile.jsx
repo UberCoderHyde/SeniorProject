@@ -6,19 +6,23 @@ const Profile = () => {
   const { user } = useAuth();
   const [pantryItems, setPantryItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    console.log("Current user:", user);
     const getPantryItems = async () => {
       try {
         const data = await fetchPantryItems();
         setPantryItems(data);
       } catch (error) {
         console.error("Error fetching pantry items:", error);
+        setError("Failed to load pantry items.");
       } finally {
         setLoading(false);
       }
     };
 
+    // Only fetch pantry items if user is logged in
     if (user) {
       getPantryItems();
     } else {
@@ -27,12 +31,17 @@ const Profile = () => {
   }, [user]);
 
   if (!user) {
-    return <div className="p-6">Please log in to view your profile.</div>;
+    return (
+      <div className="p-6 text-center">
+        Please log in to view your profile and pantry.
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-black text-gray-300 p-6">
       <div className="max-w-4xl mx-auto">
+        {/* User Info Section */}
         <div className="flex items-center space-x-4 mb-6">
           {user.profile_picture ? (
             <img
@@ -42,17 +51,25 @@ const Profile = () => {
             />
           ) : (
             <div className="w-16 h-16 rounded-full bg-gray-500 flex items-center justify-center">
-              <span className="text-xl font-bold">{user.username.charAt(0).toUpperCase()}</span>
+              <span className="text-xl font-bold">
+                {user.username.charAt(0).toUpperCase()}
+              </span>
             </div>
           )}
           <div>
-            <h1 className="text-3xl font-bold text-primary">{user.username}</h1>
+            <h1 className="text-3xl font-bold text-primary mb-2">
+              {user.username}
+            </h1>
             <p className="text-gray-300">{user.email}</p>
           </div>
         </div>
+
+        {/* Pantry Items Section */}
         <h2 className="text-2xl font-semibold mb-4">My Pantry</h2>
         {loading ? (
           <p>Loading pantry items...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
         ) : pantryItems.length === 0 ? (
           <p>Your pantry is empty. Add some ingredients!</p>
         ) : (

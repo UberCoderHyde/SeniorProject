@@ -5,7 +5,7 @@ class Ingredient(models.Model):
     name = models.CharField(max_length=255, unique=True)
     unit = models.CharField(
         max_length=50, blank=True, null=True,
-        help_text="Optional measurement unit (e.g., grams, cups)"
+        help_text="Optional measurement unit (e.g., grams, cups, lb, oz)"
     )
     description = models.TextField(blank=True, null=True)
 
@@ -20,7 +20,7 @@ class PantryItem(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     quantity = models.DecimalField(
         max_digits=6, decimal_places=2,
-        help_text="Quantity of the ingredient (e.g., 1.50)"
+        help_text="Quantity of the ingredient (e.g., 3.5 for 3.5 pounds)"
     )
 
     class Meta:
@@ -28,7 +28,27 @@ class PantryItem(models.Model):
 
     def __str__(self):
         unit_display = f" {self.ingredient.unit}" if self.ingredient.unit else ""
-        return f"{self.ingredient.name}: {self.quantity}{unit_display}"
+        return f"{self.ingredient.name}: {self.formatted_quantity}"
+
+    @property
+    def formatted_quantity(self):
+        """
+        If the ingredient's unit is 'lb' or 'pounds', convert the decimal quantity
+        to whole pounds and ounces.
+        For example, 3.5 becomes "3 lbs 8 oz".
+        Otherwise, return the raw quantity with the unit.
+        """
+        if self.ingredient.unit and self.ingredient.unit.lower() in ['lb', 'lbs', 'pound', 'pounds']:
+            pounds = int(self.quantity)
+            # Convert the fractional part to ounces (1 lb = 16 oz)
+            ounces = round((float(self.quantity) - pounds) * 16)
+            # Adjust if ounces equals 16
+            if ounces == 16:
+                pounds += 1
+                ounces = 0
+            return f"{pounds} lb{'s' if pounds != 1 else ''} {ounces} oz"
+        return f"{self.quantity} {self.ingredient.unit or ''}"
+    
 
 class Recipe(models.Model):
     title = models.CharField(max_length=255)

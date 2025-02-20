@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Ingredients from "./pages/Ingredients";
 import MyPantry from "./pages/MyPantry";
+import AddPantryItem from "./pages/AddPantryItem";
 
 function App() {
   return (
@@ -29,7 +30,8 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/pantry" element={<MyPantry />} />
             <Route path="/ingredients" element={<Ingredients />} />
-          </Routes>
+            <Route path="/add-ingredient" element={<AddPantryItem />} />
+            </Routes>
         <Footer />
       </Router>
     </AuthProvider>

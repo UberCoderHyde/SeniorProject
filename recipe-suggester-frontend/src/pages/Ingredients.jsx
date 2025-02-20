@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchIngredients } from "../services/ingredientService";
+import { fetchIngredients } from "../services/recipeService";
 
 const Ingredients = () => {
   const [ingredients, setIngredients] = useState([]);
@@ -37,7 +37,6 @@ const Ingredients = () => {
               {ingredient.unit && <p>Unit: {ingredient.unit}</p>}
               {ingredient.description && <p>{ingredient.description}</p>}
             </div>
-            // Alternatively, use a separate component like <IngredientCard ingredient={ingredient} />
           ))}
         </div>
       )}
