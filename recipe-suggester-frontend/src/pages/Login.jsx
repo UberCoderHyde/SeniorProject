@@ -1,17 +1,27 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "../services/authService";
+import useAuth from "../hooks/useAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder: Replace with an API call for user authentication.
-    console.log("Logging in with", email, password);
-    // On successful login, redirect to Home.
-    navigate("/");
+    try {
+      const data = await loginUser({ email, password });
+      console.log("Logged in successfully", data);
+      const userData = await loginUser({ email, password });
+      login(userData);
+      navigate("/"); // redirect to homepage on success
+    } catch (err) {
+      setError("Login failed. Please check your credentials.");
+      console.error(err);
+    }
   };
 
   return (

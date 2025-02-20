@@ -15,7 +15,7 @@ const RecipeCard = ({ recipe }) => {
       )}
       <div className="p-4">
         <h2 className="text-xl font-bold text-primary mb-2">{title}</h2>
-        <p className="text-gray-700 text-sm">
+        <p className="text-gray-300 text-sm">
           {instructions.substring(0, 100)}...
         </p>
         <Link

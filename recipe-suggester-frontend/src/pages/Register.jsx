@@ -1,23 +1,30 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { registerUser } from "../services/authService";
 const Register = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Placeholder: Replace with an API call for user registration.
-    console.log("Registering", { email, username, password });
-    // On successful registration, redirect to Home.
-    navigate("/");
+    try {
+      const data = await registerUser({ email, username, password });
+      console.log("Registered successfully", data);
+      navigate("/"); // redirect to homepage on success
+    } catch (err) {
+      setError("Registration failed. Please try again.");
+      console.error(err);
+    }
   };
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-tertiary p-6">
       <h1 className="text-3xl font-bold text-primary mb-6">Register</h1>
+      {error && <p className="text-red-600">{error}</p>}
       <form onSubmit={handleSubmit} className="w-full max-w-md bg-white p-6 rounded shadow">
         <label className="block mb-2">
           <span className="text-gray-700">Email</span>

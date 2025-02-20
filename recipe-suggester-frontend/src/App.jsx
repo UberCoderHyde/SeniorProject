@@ -16,10 +16,10 @@ import MyPantry from "./pages/MyPantry";
 
 function App() {
   return (
+    <main className="bg-tertiary">
     <AuthProvider>
       <Router>
         <Navbar />
-        <main className="min-h-screen bg-tertiary">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/recipes" element={<Recipes />} />
@@ -30,10 +30,10 @@ function App() {
             <Route path="/pantry" element={<MyPantry />} />
             <Route path="/ingredients" element={<Ingredients />} />
           </Routes>
-        </main>
         <Footer />
       </Router>
     </AuthProvider>
+    </main>
   );
 }
 

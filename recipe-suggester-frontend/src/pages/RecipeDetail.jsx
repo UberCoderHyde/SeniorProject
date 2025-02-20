@@ -14,7 +14,7 @@ const RecipeDetail = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 bg-black text-gray-300">
       <h1 className="text-4xl font-bold text-primary mb-4">{recipe.title}</h1>
       {recipe.image_url && (
         <img
