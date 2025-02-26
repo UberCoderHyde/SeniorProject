@@ -25,6 +25,9 @@ const Navbar = () => {
               <Link to="/add-ingredient" className="hover:underline">
                 Add Ingredient
               </Link>
+              <Link to="/profile" className="hover:underline">
+                Profile
+              </Link>
               <button onClick={logout} className="hover:underline">
                 Logout
               </button>

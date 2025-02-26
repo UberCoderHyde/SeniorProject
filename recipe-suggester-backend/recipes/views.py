@@ -1,9 +1,9 @@
+from decimal import Decimal
 from rest_framework import generics, permissions
 from .models import Ingredient, PantryItem
 from .serializers import IngredientSerializer, PantryItemSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from decimal import Decimal
 
 class IngredientListCreate(generics.ListCreateAPIView):
     queryset = Ingredient.objects.all()
@@ -19,16 +19,17 @@ class PantryItemListCreate(generics.ListCreateAPIView):
         return PantryItem.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # Get the ingredient and quantity from the validated data.
+        # Retrieve the ingredient and quantity from validated data.
         ingredient = serializer.validated_data.get("ingredient")
         quantity = serializer.validated_data.get("quantity")
-        
-        # Check if a pantry item for this ingredient already exists for the user.
         try:
+            # Check if a pantry item already exists for this ingredient and user.
             pantry_item = PantryItem.objects.get(user=self.request.user, ingredient=ingredient)
-            # If it exists, update the quantity by adding the new amount.
+            # Update the quantity.
             pantry_item.quantity = pantry_item.quantity + Decimal(quantity)
             pantry_item.save()
+            # Set serializer.instance so that the representation uses the updated model instance.
+            serializer.instance = pantry_item
         except PantryItem.DoesNotExist:
             # If it doesn't exist, create a new record.
             serializer.save(user=self.request.user)

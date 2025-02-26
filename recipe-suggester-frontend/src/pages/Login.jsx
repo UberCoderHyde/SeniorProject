@@ -13,10 +13,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Call loginUser only once
       const data = await loginUser({ email, password });
       console.log("Logged in successfully", data);
-      login(data.user || { email, username: email }, data.token);
+      // Data should be in the format: { token: "YOUR_TOKEN", user: { ... } }
+      login(data.user, data.token);
       navigate("/");
     } catch (err) {
       setError("Login failed. Please check your credentials.");
@@ -28,10 +28,7 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-tertiary p-6">
       <h1 className="text-3xl font-bold text-primary mb-6">Login</h1>
       {error && <p className="text-red-600">{error}</p>}
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white p-6 rounded shadow"
-      >
+      <form onSubmit={handleSubmit} className="w-full max-w-md bg-white p-6 rounded shadow">
         <label className="block mb-4">
           <span className="text-gray-700">Email</span>
           <input
