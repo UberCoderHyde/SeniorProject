@@ -15,12 +15,14 @@ import Ingredients from "./pages/Ingredients";
 import MyPantry from "./pages/MyPantry";
 import AddPantryItem from "./pages/AddPantryItem";
 
+
 function App() {
   return (
-    <main className="bg-tertiary">
+    <div className="flex flex-col min-h-screen bg-tertiary"> 
     <AuthProvider>
       <Router>
         <Navbar />
+        <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/recipes" element={<Recipes />} />
@@ -32,10 +34,11 @@ function App() {
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/add-ingredient" element={<AddPantryItem />} />
             </Routes>
+            </main>
         <Footer />
       </Router>
     </AuthProvider>
-    </main>
+    </div>
   );
 }
 
