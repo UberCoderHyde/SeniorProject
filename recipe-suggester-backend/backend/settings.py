@@ -1,3 +1,7 @@
+"""
+Django settings for backend project.
+"""
+
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -5,25 +9,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-y#il*9&%5-nlmxs$adote2b40%2%u+bga$d+m6)pl0e6)hyf3i'
 DEBUG = True
 
-ALLOWED_HOSTS = []  # Add "localhost" if needed
+ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
+    # Default Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party apps
     'rest_framework',
-    'rest_framework.authtoken',  # Added for token-based authentication
+    'rest_framework.authtoken',
     'corsheaders',
+
+    # Your apps
     'recipes',
     'users',
 ]
 
-# IMPORTANT: Place corsheaders.middleware.CorsMiddleware at the very top
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # must be first
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -89,31 +97,24 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',  # Optional fallback
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
 
-# Session settings (if still needed)
-SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
-SESSION_COOKIE_NAME = "user_session"
-SESSION_COOKIE_HTTPONLY = True
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_SAMESITE = 'None'  # Set to 'None' to allow cross-site requests
-SESSION_COOKIE_SECURE = False     # Use False for local development (HTTP)
-
-# CORS settings for django-cors-headers (v3+)
+# CORS settings – allow your frontend to communicate with your backend
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://localhost:5174",  # add additional origins if needed
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# CSRF settings
+# CSRF settings (if using session auth as well)
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
 ]
-CSRF_COOKIE_SECURE = True   # For local development, set this to False if not using HTTPS
-CSRF_COOKIE_HTTPONLY = True
+
+# For local development with session auth if needed
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = False  # False if not using HTTPS in development

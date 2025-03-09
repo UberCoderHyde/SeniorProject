@@ -3,26 +3,15 @@ from rest_framework import serializers
 
 User = get_user_model()
 
-# Serializer for logging in.
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
-# Serializer for returning user data.
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            "id", 
-            "email", 
-            "username", 
-            "first_name", 
-            "last_name", 
-            "profile_picture", 
-            "bio"
-        )
+        fields = ("id", "email", "username", "first_name", "last_name", "profile_picture", "bio")
 
-# Serializer for registration.
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     first_name = serializers.CharField(required=True)
@@ -30,10 +19,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            "id", "email", "username", "first_name", "last_name", "password", 
-            "profile_picture", "bio"
-        )
+        fields = ("id", "email", "username", "first_name", "last_name", "password", "profile_picture", "bio")
 
     def create(self, validated_data):
         user = User.objects.create_user(

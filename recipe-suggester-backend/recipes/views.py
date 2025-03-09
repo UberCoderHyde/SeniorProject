@@ -1,16 +1,13 @@
 from decimal import Decimal
 from rest_framework import generics, permissions
-from .models import Ingredient, PantryItem
-from .serializers import IngredientSerializer, PantryItemSerializer
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from .models import Ingredient, PantryItem, Recipe
+from .serializers import IngredientSerializer, PantryItemSerializer, RecipeSerializer
 
 class IngredientListCreate(generics.ListCreateAPIView):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
-@method_decorator(csrf_exempt, name='dispatch')
 class PantryItemListCreate(generics.ListCreateAPIView):
     serializer_class = PantryItemSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -19,19 +16,15 @@ class PantryItemListCreate(generics.ListCreateAPIView):
         return PantryItem.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # Retrieve the ingredient and quantity from validated data.
+        # Try to update an existing pantry item instead of creating a duplicate.
         ingredient = serializer.validated_data.get("ingredient")
         quantity = serializer.validated_data.get("quantity")
         try:
-            # Check if a pantry item already exists for this ingredient and user.
             pantry_item = PantryItem.objects.get(user=self.request.user, ingredient=ingredient)
-            # Update the quantity.
             pantry_item.quantity = pantry_item.quantity + Decimal(quantity)
             pantry_item.save()
-            # Set serializer.instance so that the representation uses the updated model instance.
-            serializer.instance = pantry_item
+            serializer.instance = pantry_item  # set the serializer's instance for representation
         except PantryItem.DoesNotExist:
-            # If it doesn't exist, create a new record.
             serializer.save(user=self.request.user)
 
 class PantryItemRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
@@ -40,3 +33,13 @@ class PantryItemRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return PantryItem.objects.filter(user=self.request.user)
+
+class RecipeListCreate(generics.ListCreateAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class RecipeRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]

@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 const RecipeDetail = () => {
   const { id } = useParams();
 
-  // Placeholder: In a real app, fetch recipe details using the id.
+  // Placeholder data – replace with actual API call to fetch recipe details.
   const recipe = {
     id,
     title: "Spaghetti Carbonara",

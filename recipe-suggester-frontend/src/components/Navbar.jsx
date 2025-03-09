@@ -7,10 +7,12 @@ const Navbar = () => {
 
   return (
     <nav className="bg-primary text-white py-4 shadow-md">
-      <div className="container mx-auto flex justify-between items-center px-4">
-        <Link to="/" className="text-2xl font-bold">
-          Recipe Suggester
-        </Link>
+      <div className="mx-auto max-w-screen-xl flex justify-between items-center px-4">
+        <div className="flex-shrink-0">
+          <Link to="/" className="text-2xl font-bold">
+            Recipe Suggester
+          </Link>
+        </div>
         <div className="flex items-center space-x-4">
           <Link to="/" className="hover:underline">
             Home
@@ -20,7 +22,6 @@ const Navbar = () => {
           </Link>
           {user ? (
             <>
-              {/* Show the user's first name */}
               <span className="font-semibold">Hi, {user.first_name}</span>
               <Link to="/add-ingredient" className="hover:underline">
                 Add Ingredient

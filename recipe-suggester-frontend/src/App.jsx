@@ -1,44 +1,37 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 
-// Pages
+// Import pages
 import Home from "./pages/Home";
 import Recipes from "./pages/Recipes";
 import RecipeDetail from "./pages/RecipeDetail";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
-import Ingredients from "./pages/Ingredients";
-import MyPantry from "./pages/MyPantry";
+import AddIngredient from "./pages/AddIngredient";
 import AddPantryItem from "./pages/AddPantryItem";
-
 
 function App() {
   return (
-    <div className="flex flex-col min-h-screen bg-tertiary"> 
-    <AuthProvider>
-      <Router>
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/recipes" element={<Recipes />} />
-            <Route path="/recipes/:id" element={<RecipeDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/pantry" element={<MyPantry />} />
-            <Route path="/ingredients" element={<Ingredients />} />
-            <Route path="/add-ingredient" element={<AddPantryItem />} />
-            </Routes>
-            </main>
-        <Footer />
-      </Router>
-    </AuthProvider>
-    </div>
+    <Router>
+      <Navbar />
+      <main className="min-h-screen bg-black text-gray-300">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/recipes" element={<Recipes />} />
+          <Route path="/recipes/:id" element={<RecipeDetail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/add-ingredient" element={<AddIngredient />} />
+          <Route path="/add-pantry-item" element={<AddPantryItem />} />
+          {/* Add additional routes as needed */}
+        </Routes>
+      </main>
+      <Footer />
+    </Router>
   );
 }
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Ingredient, PantryItem
+from .models import Ingredient, PantryItem, Recipe, RecipeIngredient
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,13 +7,9 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'unit', 'description']
 
 class PantryItemSerializer(serializers.ModelSerializer):
-    # Show detailed ingredient info when reading.
     ingredient = IngredientSerializer(read_only=True)
-    # When creating/updating, use ingredient_id.
     ingredient_id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all(),
-        source='ingredient',
-        write_only=True
+        queryset=Ingredient.objects.all(), source='ingredient', write_only=True
     )
     formatted_quantity = serializers.SerializerMethodField()
 
@@ -23,3 +19,17 @@ class PantryItemSerializer(serializers.ModelSerializer):
 
     def get_formatted_quantity(self, obj):
         return obj.formatted_quantity
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    ingredient = IngredientSerializer(read_only=True)
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ['ingredient', 'quantity']
+
+class RecipeSerializer(serializers.ModelSerializer):
+    recipe_ingredients = RecipeIngredientSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'title', 'instructions', 'image_url', 'recipe_ingredients']
