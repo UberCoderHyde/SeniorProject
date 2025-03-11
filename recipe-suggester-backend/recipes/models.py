@@ -1,12 +1,11 @@
 from django.db import models
 from django.conf import settings
-from decimal import Decimal
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=255, unique=True)
     unit = models.CharField(
         max_length=50, blank=True, null=True,
-        help_text="Optional measurement unit (e.g., grams, cups, lb, oz)"
+        help_text="Measurement unit (e.g., grams, cups, lb, oz)"
     )
     description = models.TextField(blank=True, null=True)
 
@@ -19,25 +18,12 @@ class PantryItem(models.Model):
         related_name="pantry_items"
     )
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    quantity = models.DecimalField(max_digits=6, decimal_places=2, help_text="e.g., 3.5 for 3.5 lbs")
 
     class Meta:
         unique_together = ('user', 'ingredient')
 
     def __str__(self):
-        return f"{self.ingredient.name}: {self.formatted_quantity}"
-
-    @property
-    def formatted_quantity(self):
-        # If unit is lb or similar, convert fractional pounds to pounds and ounces.
-        if self.ingredient.unit and self.ingredient.unit.lower() in ['lb', 'lbs', 'pound', 'pounds']:
-            pounds = int(self.quantity)
-            ounces = round((float(self.quantity) - pounds) * 16)
-            if ounces == 16:
-                pounds += 1
-                ounces = 0
-            return f"{pounds} lb{'s' if pounds != 1 else ''} {ounces} oz"
-        return f"{self.quantity} {self.ingredient.unit or ''}"
+        return f"{self.ingredient.name}"
 
 class Recipe(models.Model):
     title = models.CharField(max_length=255)

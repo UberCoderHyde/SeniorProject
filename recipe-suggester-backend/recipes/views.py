@@ -1,13 +1,15 @@
-from decimal import Decimal
 from rest_framework import generics, permissions
 from .models import Ingredient, PantryItem, Recipe
 from .serializers import IngredientSerializer, PantryItemSerializer, RecipeSerializer
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 class IngredientListCreate(generics.ListCreateAPIView):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+@method_decorator(csrf_exempt, name='dispatch')
 class PantryItemListCreate(generics.ListCreateAPIView):
     serializer_class = PantryItemSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -16,16 +18,14 @@ class PantryItemListCreate(generics.ListCreateAPIView):
         return PantryItem.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        # Try to update an existing pantry item instead of creating a duplicate.
         ingredient = serializer.validated_data.get("ingredient")
-        quantity = serializer.validated_data.get("quantity")
-        try:
-            pantry_item = PantryItem.objects.get(user=self.request.user, ingredient=ingredient)
-            pantry_item.quantity = pantry_item.quantity + Decimal(quantity)
-            pantry_item.save()
-            serializer.instance = pantry_item  # set the serializer's instance for representation
-        except PantryItem.DoesNotExist:
-            serializer.save(user=self.request.user)
+        # Check if the pantry item already exists for this user.
+        if PantryItem.objects.filter(user=self.request.user, ingredient=ingredient).exists():
+            # Option 1: Do nothing (ignore duplicate)
+            # Option 2: Raise an error or return a custom response.
+            # For this example, we'll simply not create a duplicate.
+            return
+        serializer.save(user=self.request.user)
 
 class PantryItemRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PantryItemSerializer

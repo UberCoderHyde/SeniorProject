@@ -11,14 +11,10 @@ class PantryItemSerializer(serializers.ModelSerializer):
     ingredient_id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(), source='ingredient', write_only=True
     )
-    formatted_quantity = serializers.SerializerMethodField()
 
     class Meta:
         model = PantryItem
-        fields = ['id', 'ingredient', 'ingredient_id', 'quantity', 'formatted_quantity']
-
-    def get_formatted_quantity(self, obj):
-        return obj.formatted_quantity
+        fields = ['id', 'ingredient', 'ingredient_id']
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
     ingredient = IngredientSerializer(read_only=True)

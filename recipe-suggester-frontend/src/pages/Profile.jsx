@@ -73,9 +73,6 @@ const Profile = () => {
             {pantryItems.map((item) => (
               <div key={item.id} className="border p-4 rounded bg-gray-800">
                 <h3 className="font-bold text-lg">{item.ingredient.name}</h3>
-                <p>
-                  Quantity: {item.formatted_quantity || `${item.quantity} ${item.ingredient.unit || ""}`}
-                </p>
               </div>
             ))}
           </div>

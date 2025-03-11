@@ -1,10 +1,11 @@
+// src/pages/RecipeDetail.jsx
 import React from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 const RecipeDetail = () => {
   const { id } = useParams();
 
-  // Placeholder data – replace with actual API call to fetch recipe details.
+  // Placeholder data – replace with an API call to fetch recipe details.
   const recipe = {
     id,
     title: "Spaghetti Carbonara",
@@ -27,6 +28,12 @@ const RecipeDetail = () => {
       <p className="mb-4">{recipe.ingredients}</p>
       <h2 className="text-2xl font-semibold mb-2">Instructions</h2>
       <p>{recipe.instructions}</p>
+      <Link
+        to={`/recipes/${id}/shopping-list`}
+        className="bg-primary text-white px-4 py-2 rounded hover:bg-highlight transition mt-4 inline-block"
+      >
+        Generate Shopping List
+      </Link>
     </div>
   );
 };

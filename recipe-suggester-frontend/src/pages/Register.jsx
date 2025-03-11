@@ -18,10 +18,10 @@ const Register = () => {
     try {
       const data = await registerUser({ email, username, first_name: firstName, last_name: lastName, password });
       console.log("Registered successfully", data);
-      // Optionally log in immediately after registration:
-      // If your registration endpoint doesn't return a token, redirect to login page.
-      // For this example, we assume immediate login is not implemented.
-      navigate("/login");
+      // Here, you can call login() to update the context if desired,
+      // or simply redirect to login page.
+      login(data, data.token); // if your endpoint returns a token and user data
+      navigate("/");
     } catch (err) {
       setError("Registration failed. Please try again.");
       console.error(err);

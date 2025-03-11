@@ -15,6 +15,7 @@ const Login = () => {
     try {
       const data = await loginUser({ email, password });
       console.log("Logged in successfully", data);
+      // Data should be in the format: { token: "YOUR_TOKEN", user: { ... } }
       login(data.user, data.token);
       navigate("/");
     } catch (err) {

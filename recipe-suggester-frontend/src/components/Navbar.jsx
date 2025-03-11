@@ -7,6 +7,7 @@ const Navbar = () => {
 
   return (
     <nav className="bg-primary text-white py-4 shadow-md">
+      {/* Fixed container width */}
       <div className="mx-auto max-w-screen-xl flex justify-between items-center px-4">
         <div className="flex-shrink-0">
           <Link to="/" className="text-2xl font-bold">

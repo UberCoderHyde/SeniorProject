@@ -1,13 +1,13 @@
-// src/pages/AddPantryItem.jsx
 import React, { useState, useEffect } from "react";
-import { fetchIngredients, addIngredient, addPantryItem } from "../services/ingredientService";
+import { fetchIngredients, addPantryItem, addIngredient } from "../services/pantryService";
 
 const AddPantryItem = () => {
+  // For existing ingredients
   const [ingredients, setIngredients] = useState([]);
   const [selectedIngredient, setSelectedIngredient] = useState("");
   const [quantity, setQuantity] = useState("");
 
-  // For adding a new ingredient if needed:
+  // For adding a new ingredient if needed
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [newIngredientName, setNewIngredientName] = useState("");
   const [newIngredientUnit, setNewIngredientUnit] = useState("");
@@ -33,6 +33,7 @@ const AddPantryItem = () => {
   const handleIngredientChange = (e) => {
     const value = e.target.value;
     setSelectedIngredient(value);
+    // If user selects the "new" option, show new ingredient fields.
     if (value === "new") {
       setIsAddingNew(true);
     } else {
@@ -45,6 +46,7 @@ const AddPantryItem = () => {
     try {
       let ingredientId = selectedIngredient;
 
+      // If the user is adding a new ingredient:
       if (isAddingNew) {
         const newIng = await addIngredient({
           name: newIngredientName,
@@ -52,13 +54,16 @@ const AddPantryItem = () => {
           description: newIngredientDescription,
         });
         ingredientId = newIng.id;
-        // Optionally, update the ingredients list:
+        // Optionally, refresh the ingredients list
         setIngredients((prev) => [...prev, newIng]);
       }
 
+      // Now add the pantry item using the determined ingredientId.
       await addPantryItem({ ingredient_id: ingredientId, quantity });
       setMessage("Pantry item added successfully!");
       setError("");
+
+      // Reset form fields
       setSelectedIngredient("");
       setQuantity("");
       setIsAddingNew(false);
@@ -96,6 +101,7 @@ const AddPantryItem = () => {
               <option value="new">Add New Ingredient</option>
             </select>
           </label>
+
           {isAddingNew && (
             <>
               <label className="block mb-4">
@@ -133,11 +139,12 @@ const AddPantryItem = () => {
                   onChange={(e) => setNewIngredientDescription(e.target.value)}
                   className="mt-1 block w-full p-2 bg-gray-700 border border-gray-600 rounded"
                   rows="3"
-                  placeholder="E.g., 1 cup = 16 tbsp, 1 lb = 16 oz"
+                  placeholder="For example: 1 cup = 16 tbsp, 1 lb = 16 oz"
                 ></textarea>
               </label>
             </>
           )}
+
           <label className="block mb-4">
             <span className="text-gray-200">Quantity</span>
             <input
