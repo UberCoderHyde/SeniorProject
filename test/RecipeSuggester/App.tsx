@@ -15,6 +15,7 @@ export type AuthStackParamList = {
   Registration: undefined;
   Home: undefined;
   Profile: undefined;
+  RecipeDiscovery: undefined; 
 };
 
 export type RecipeStackParamList = {
@@ -32,6 +33,8 @@ function AuthStackNavigator() {
       <AuthStack.Screen name="Registration" component={RegistrationScreen} options={{ title: 'Register' }} />
       <AuthStack.Screen name="Home" component={HomeScreen} options={{ title: 'Recipe Suggester Home' }} />
       <AuthStack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Your Profile' }} />
+      <AuthStack.Screen name="RecipeDiscovery" component={RecipeDiscoveryScreen} options={{ title: 'Discover Recipes' }} 
+/>
     </AuthStack.Navigator>
   );
 }
@@ -48,10 +51,7 @@ function RecipeStackNavigator() {
 export default function App() {
   return (
     <NavigationContainer>
-      {/* Use your preferred navigator; here we are displaying the AuthStackNavigator */}
       <AuthStackNavigator />
-      {/* Uncomment below to include the recipe navigator */}
-      {/* <RecipeStackNavigator /> */}
     </NavigationContainer>
   );
 }

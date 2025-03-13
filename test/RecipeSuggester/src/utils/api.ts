@@ -4,7 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 // Create an Axios instance with a base URL
 const api = axios.create({
-  baseURL: 'https://your-django-api.com/api/', // Update with your API base URL
+  baseURL: 'http://192.168.1.9:8000/api/', // Update with your API base URL
   timeout: 10000,
 });
 

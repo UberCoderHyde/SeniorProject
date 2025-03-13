@@ -16,7 +16,7 @@ venv\Scripts\python -m pip install -r requirements.txt
 echo run venv\Scripts\activate in your terminal to do anything else with the terminal
 echo Starting Django Backend...
 
-venv\Scripts\python manage.py runserver
+venv\Scripts\python manage.py runserver 0.0.0.0:8000
 echo to start venv in terminal use: venv\Scripts\activate
 echo if there is a error run in venv python -m pip install -r requirements.txt
 

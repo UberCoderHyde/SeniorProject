@@ -1,6 +1,6 @@
 // src/screens/RecipeDetailScreen.tsx
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Button, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { RouteProp } from '@react-navigation/native';
@@ -29,7 +29,7 @@ const RecipeDetailScreen: React.FC<Props> = ({ route }) => {
   const fetchRecipeDetail = async () => {
     const token = await SecureStore.getItemAsync('userToken');
     try {
-      const response = await axios.get(`https://your-django-api.com/api/recipes/${recipeId}/`, {
+      const response = await axios.get(`http://192.168.1.9:8000/api/recipes/${recipeId}/`, {
         headers: { Authorization: `Token ${token}` },
       });
       setRecipe(response.data);
@@ -43,10 +43,9 @@ const RecipeDetailScreen: React.FC<Props> = ({ route }) => {
   const generateShoppingList = async () => {
     const token = await SecureStore.getItemAsync('userToken');
     try {
-      const response = await axios.get(`https://your-django-api.com/api/recipes/${recipeId}/shopping-list/`, {
+      const response = await axios.get(`http://192.168.1.9:8000/api/recipes/${recipeId}/shopping-list/`, {
         headers: { Authorization: `Token ${token}` },
       });
-      // Assuming the API returns an array of missing ingredient names
       setShoppingList(response.data);
     } catch (error) {
       console.error('Error generating shopping list:', error);
@@ -61,7 +60,7 @@ const RecipeDetailScreen: React.FC<Props> = ({ route }) => {
   if (loading || !recipe) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1E90FF" />
+        <ActivityIndicator size="large" color="#FC9F5B" />
       </View>
     );
   }
@@ -72,18 +71,20 @@ const RecipeDetailScreen: React.FC<Props> = ({ route }) => {
       <Text style={styles.description}>{recipe.description}</Text>
       <Text style={styles.subtitle}>Ingredients:</Text>
       {recipe.ingredients.map((item, index) => (
-        <Text key={index}>
+        <Text key={index} style={styles.itemText}>
           {item.ingredient} - {item.quantity}
         </Text>
       ))}
       <Text style={styles.subtitle}>Instructions:</Text>
-      <Text>{recipe.instructions}</Text>
-      <Button title="Generate Shopping List" onPress={generateShoppingList} />
+      <Text style={styles.instructions}>{recipe.instructions}</Text>
+      <TouchableOpacity style={styles.button} onPress={generateShoppingList}>
+        <Text style={styles.buttonText}>Generate Shopping List</Text>
+      </TouchableOpacity>
       {shoppingList.length > 0 && (
         <View style={styles.shoppingList}>
           <Text style={styles.subtitle}>Shopping List:</Text>
           {shoppingList.map((item, index) => (
-            <Text key={index}>- {item}</Text>
+            <Text key={index} style={styles.itemText}>- {item}</Text>
           ))}
         </View>
       )}
@@ -95,30 +96,64 @@ export default RecipeDetailScreen;
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
+    padding: 20,
+    flexGrow: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#000',
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 8,
+    color: '#D3D3D3',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   description: {
-    fontSize: 16,
-    marginBottom: 16,
+    fontSize: 18,
+    color: '#D3D3D3',
+    marginBottom: 15,
+    textAlign: 'center',
   },
   subtitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    color: '#D3D3D3',
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  itemText: {
+    fontSize: 16,
+    color: '#D3D3D3',
+    marginVertical: 4,
+  },
+  instructions: {
+    fontSize: 16,
+    color: '#D3D3D3',
+    marginBottom: 20,
+    textAlign: 'left',
+  },
+  button: {
+    backgroundColor: '#FC9F5B',
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   shoppingList: {
-    marginTop: 16,
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#ECE4B7',
+    borderRadius: 8,
   },
 });

@@ -1,6 +1,6 @@
 // src/screens/RegistrationScreen.tsx
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import axios from 'axios';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { AuthStackParamList } from '../../App';
@@ -23,7 +23,7 @@ const RegistrationScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleRegister = async () => {
     try {
-      await axios.post('https://your-django-api.com/api/users/register/', {
+      await axios.post('http://192.168.1.9:8000/api/users/register/', {
         email,
         username,
         first_name: firstName,
@@ -40,41 +40,50 @@ const RegistrationScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Register</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="First Name"
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        value={lastName}
-        onChangeText={setLastName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <Button title="Register" onPress={handleRegister} />
+      <View style={styles.card}>
+        <Text style={styles.title}>Register</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#888"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          placeholderTextColor="#888"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="First Name"
+          placeholderTextColor="#888"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last Name"
+          placeholderTextColor="#888"
+          value={lastName}
+          onChangeText={setLastName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#888"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
+          <Text style={styles.buttonText}>Register</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -84,21 +93,48 @@ export default RegistrationScreen;
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 16,
+    backgroundColor: '#000', // Main background: Black
+    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    padding: 20,
+  },
+  card: {
+    backgroundColor: '#ECE4B7', // Tertiary color for forms/cards
+    padding: 20,
+    borderRadius: 10,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
   },
   title: {
-    fontSize: 24,
-    marginBottom: 24,
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 20,
     textAlign: 'center',
   },
   input: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 50,
+    borderColor: '#FBD1A2', // Secondary color border
     borderWidth: 1,
-    marginBottom: 16,
-    paddingHorizontal: 8,
-    borderRadius: 4,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    color: '#000',
+    backgroundColor: '#fff',
+  },
+  button: {
+    backgroundColor: '#FC9F5B', // Primary color
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
