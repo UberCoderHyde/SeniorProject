@@ -1,5 +1,6 @@
 const API_BASE_URL = "http://localhost:8000/api";
 
+// Helper function to get token-based headers.
 export const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return token
@@ -22,11 +23,11 @@ export const fetchIngredients = async () => {
   return await response.json();
 };
 
-export const addIngredient = async ({ name, unit, description }) => {
+export const addIngredient = async ({ name }) => {
   const response = await fetch(`${API_BASE_URL}/ingredients/`, {
     method: "POST",
     headers: getAuthHeaders(),
-    body: JSON.stringify({ name, unit, description }),
+    body: JSON.stringify({ name }),
   });
   if (!response.ok) {
     throw new Error("Failed to add ingredient");
@@ -44,6 +45,7 @@ export const fetchPantryItems = async () => {
   return await response.json();
 };
 
+// Updated: Removed the quantity parameter.
 export const addPantryItem = async ({ ingredient_id }) => {
   const response = await fetch(`${API_BASE_URL}/pantry/`, {
     method: "POST",

@@ -28,6 +28,8 @@ class RegisterUserView(APIView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            print(serializer.errors)  # Debug output in the server log
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         user = serializer.save()
         return Response({"user": UserSerializer(user).data}, status=status.HTTP_201_CREATED)
