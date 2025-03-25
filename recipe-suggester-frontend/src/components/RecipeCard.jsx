@@ -2,13 +2,13 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const RecipeCard = ({ recipe }) => {
-  const { id, title, image_url, instructions } = recipe;
+  const { id, title, image, ingredients } = recipe;
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-      {image_url && (
+      {image && (
         <img
-          src={image_url}
+          src={image}
           alt={title}
           className="w-full h-48 object-cover"
         />
@@ -16,7 +16,7 @@ const RecipeCard = ({ recipe }) => {
       <div className="p-4">
         <h2 className="text-xl font-bold text-primary mb-2">{title}</h2>
         <p className="text-gray-300 text-sm">
-          {instructions.substring(0, 100)}...
+          {ingredients.join(", ")}
         </p>
         <Link
           to={`/recipes/${id}`}

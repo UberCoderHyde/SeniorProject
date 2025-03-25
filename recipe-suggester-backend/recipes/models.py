@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 
 class Ingredient(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=1000, unique=True)
     unit = models.CharField(
         max_length=50, blank=True, null=True,
         help_text="Measurement unit (e.g., grams, cups, lb, oz)"
@@ -26,9 +26,9 @@ class PantryItem(models.Model):
         return f"{self.ingredient.name}"
 
 class Recipe(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=1000)
     instructions = models.TextField()
-    image_url = models.URLField(blank=True, null=True)
+    image = models.ImageField(upload_to='recipes/Images/', blank=True, null=True)  # updated field
     ingredients = models.ManyToManyField(
         Ingredient,
         through="RecipeIngredient",

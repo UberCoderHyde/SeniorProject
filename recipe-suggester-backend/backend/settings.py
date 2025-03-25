@@ -1,6 +1,7 @@
+import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 SECRET_KEY = 'django-insecure-y#il*9&%5-nlmxs$adote2b40%2%u+bga$d+m6)pl0e6)hyf3i'
 DEBUG = True
@@ -122,3 +123,6 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 CSRF_COOKIE_SECURE = True   # For local development, set this to False if not using HTTPS
 CSRF_COOKIE_HTTPONLY = True
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR , 'media')

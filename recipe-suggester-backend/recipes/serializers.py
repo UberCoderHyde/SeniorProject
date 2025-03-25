@@ -1,6 +1,5 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics, permissions
 from .models import Ingredient, PantryItem, Recipe, RecipeIngredient
-
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
@@ -25,7 +24,28 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     recipe_ingredients = RecipeIngredientSerializer(many=True, read_only=True)
+    image = serializers.ImageField(required=False)  # Updated field name
 
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'instructions', 'image_url', 'recipe_ingredients']
+        # Replace image_url with image
+        fields = ['id', 'title', 'instructions', 'image', 'recipe_ingredients']
+ 
+class RecipeListSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    ingredients = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'title', 'image', 'ingredients']
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.image:
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+
+    def get_ingredients(self, obj):
+        return list(obj.ingredients.values_list('name', flat=True))

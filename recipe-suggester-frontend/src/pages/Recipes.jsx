@@ -1,26 +1,28 @@
 import React, { useEffect, useState } from "react";
 import RecipeCard from "../components/RecipeCard";
+import { getAuthHeaders } from "../services/ingredientService"; // Ensure this helper is available.
+const API_BASE_URL = "http://localhost:8000/api";
 
 const Recipes = () => {
   const [recipes, setRecipes] = useState([]);
 
-  // Placeholder: Replace with an actual API call to fetch recipes.
   useEffect(() => {
-    const sampleRecipes = [
-      {
-        id: 1,
-        title: "Spaghetti Carbonara",
-        image_url: "https://via.placeholder.com/400x300",
-        instructions: "Boil pasta. Fry bacon. Mix eggs with cheese. Combine all.",
-      },
-      {
-        id: 2,
-        title: "Chicken Salad",
-        image_url: "https://via.placeholder.com/400x300",
-        instructions: "Chop veggies, grill chicken, toss with dressing.",
-      },
-    ];
-    setRecipes(sampleRecipes);
+    const fetchMinimalRecipes = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/recipes/minimal/?random=true`, {
+          headers: getAuthHeaders(),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch minimal recipes");
+        }
+        const data = await response.json();
+        setRecipes(data);
+      } catch (error) {
+        console.error("Error fetching minimal recipes: ", error);
+      }
+    };
+
+    fetchMinimalRecipes();
   }, []);
 
   return (
