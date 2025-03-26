@@ -46,3 +46,11 @@ class RecipeIngredient(models.Model):
     def __str__(self):
         unit_display = f" {self.ingredient.unit}" if self.ingredient.unit else ""
         return f"{self.quantity}{unit_display} of {self.ingredient.name}"
+    
+
+class Review(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="recipe_ingredients")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    review_text = models.TextField()
+    rating = models.IntegerChoices(choices = [1, 2, 3, 4, 5])
+    timestamp = models.DateTimeField()
