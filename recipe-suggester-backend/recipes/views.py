@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
-from .models import Ingredient, PantryItem, Recipe
-from .serializers import IngredientSerializer, PantryItemSerializer, RecipeSerializer, RecipeListSerializer
+from .models import Ingredient, PantryItem, Recipe, Review
+from .serializers import IngredientSerializer, PantryItemSerializer, RecipeSerializer, RecipeListSerializer, ReviewSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import random
@@ -70,3 +70,28 @@ class RecipeListMinimalView(generics.ListAPIView):
                 random_ids = random.sample(recipe_ids, 20)
                 queryset = queryset.filter(id__in=random_ids)
         return queryset
+
+# POST <url>/recipes/<recipe_id>/reviews - create a review for a recipe with <recipe_id>
+# GET <url>/recipes/<recipe_id/reviews - get all reviews for a recipe with <recipe_id>
+class ReviewListCreate(generics.ListCreateAPIView):
+    queryset = Review.objects.all()
+    serializer = ReviewSerializer
+    # create reviews is authenticated and listing reviews doesn't need authentication
+    permissions_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        recipe_id = self.kwargs["recipe_id"]
+        return Review.objects.filter(recipe_id=recipe_id)
+    
+    def perform_create(self, serializer):
+        recipe_id = self.kwargs["recipe_id"]
+        serializer.save(user=self.request.user, recipe_id=recipe_id)
+
+
+
+
+
+
+
+
+
