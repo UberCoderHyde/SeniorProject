@@ -1,5 +1,5 @@
 from rest_framework import serializers, generics, permissions
-from .models import Ingredient, PantryItem, Recipe, RecipeIngredient
+from .models import Ingredient, PantryItem, Recipe, RecipeIngredient, Review
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
@@ -49,3 +49,15 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         return list(obj.ingredients.values_list('name', flat=True))
+    
+
+class ReviewSerializer(serializers.ModelSerializer):
+    # Show user's email for the user field
+    user = serializers.ReadOnlyField(source="user.email")
+
+    # Don't nest the recipe field with the full recipe object
+    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all(), write_only=True)
+
+    class Meta:
+        model = Review
+        fields = ["id", "user", "recipe", "rating", "review_text", "timestamp"]
