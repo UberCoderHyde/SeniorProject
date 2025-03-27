@@ -49,8 +49,17 @@ class RecipeIngredient(models.Model):
     
 
 class Review(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="recipe_ingredients")
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="reviews")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    review_text = models.TextField()
-    rating = models.IntegerChoices(choices = [1, 2, 3, 4, 5])
-    timestamp = models.DateTimeField()
+    review_text = models.TextField(default="No review provided")
+    rating = models.IntegerField(
+        choices = [
+            (1, "1 star"),
+            (2, "2 star"), 
+            (3, "3 star"), 
+            (4, "4 star"), 
+            (5, "5 star")
+        ], 
+        help_text="Rating from 1 (worst) to 5 (best)"
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
