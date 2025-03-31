@@ -49,6 +49,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
 class ReviewSerializer(serializers.ModelSerializer):
     # Show user's email for the user field
+    # Might have to change could just link to user and then show user email so that it can be later edited by user
     user = serializers.ReadOnlyField(source="user.email")
 
     # Don't nest the recipe field with the full recipe object

@@ -147,34 +147,6 @@ const AddPantryItemMultiSelect = () => {
                   required
                 />
               </label>
-              <label className="block mb-2">
-                <span className="text-gray-200">Measurement Unit</span>
-                <select
-                  value={newIngredientUnit}
-                  onChange={(e) => setNewIngredientUnit(e.target.value)}
-                  className="mt-1 block w-full p-2 bg-gray-700 border border-gray-600 rounded"
-                  required
-                >
-                  <option value="">Select a unit</option>
-                  <option value="tsp">Teaspoon (tsp)</option>
-                  <option value="tbsp">Tablespoon (tbsp)</option>
-                  <option value="cup">Cup</option>
-                  <option value="lb">Pound (lb)</option>
-                  <option value="oz">Ounce (oz)</option>
-                  <option value="g">Gram (g)</option>
-                  <option value="ml">Milliliter (ml)</option>
-                </select>
-              </label>
-              <label className="block mb-2">
-                <span className="text-gray-200">Description / Conversion Info (optional)</span>
-                <textarea
-                  value={newIngredientDescription}
-                  onChange={(e) => setNewIngredientDescription(e.target.value)}
-                  className="mt-1 block w-full p-2 bg-gray-700 border border-gray-600 rounded"
-                  rows="3"
-                  placeholder="E.g., 1 cup = 16 tbsp, 1 lb = 16 oz"
-                ></textarea>
-              </label>
             </div>
           )}
           <button
