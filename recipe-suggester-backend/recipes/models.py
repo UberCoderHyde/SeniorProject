@@ -64,28 +64,16 @@ class Recipe(models.Model):
         known_ingredients = [name.lower() for name in Ingredient.objects.values_list('name', flat=True)]
         matched_ingredients = []
 
-<<<<<<< Updated upstream
     def __str__(self):
         unit_display = f" {self.ingredient.unit}" if self.ingredient.unit else ""
         return f"{self.quantity}{unit_display} of {self.ingredient.name}"
     
+    @property
+    def cleaned_ingredients(self):
+        lines = self.recipeIngred.split('\n')
+        known_ingredients = [name.lower() for name in Ingredient.objects.values_list('name', flat=True)]
+        matched_ingredients = []
 
-class Review(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="reviews")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    review_text = models.TextField(default="No review provided")
-    rating = models.IntegerField(
-        choices = [
-            (1, "1 star"),
-            (2, "2 star"), 
-            (3, "3 star"), 
-            (4, "4 star"), 
-            (5, "5 star")
-        ], 
-        help_text="Rating from 1 (worst) to 5 (best)"
-    )
-    timestamp = models.DateTimeField(auto_now_add=True)
-=======
         for line in lines:
             line = line.lower()
             line = re.sub(r'[^a-zA-Z\s]', '', line).strip()
@@ -110,4 +98,20 @@ class Review(models.Model):
                     break  # stop on first match
 
         return matched_ingredients
->>>>>>> Stashed changes
+    
+
+class Review(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="reviews")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    review_text = models.TextField(default="No review provided")
+    rating = models.IntegerField(
+        choices = [
+            (1, "1 star"),
+            (2, "2 star"), 
+            (3, "3 star"), 
+            (4, "4 star"), 
+            (5, "5 star")
+        ], 
+        help_text="Rating from 1 (worst) to 5 (best)"
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)

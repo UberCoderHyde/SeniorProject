@@ -1,12 +1,6 @@
-<<<<<<< Updated upstream
-from rest_framework import serializers, generics, permissions
-from .models import Ingredient, PantryItem, Recipe, RecipeIngredient, Review
-=======
 from rest_framework import serializers
-from .models import Ingredient, PantryItem, Recipe
+from .models import Ingredient, PantryItem, Recipe, Review
 
-
->>>>>>> Stashed changes
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
@@ -48,7 +42,6 @@ class RecipeListSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
-<<<<<<< Updated upstream
 
     def get_ingredients(self, obj):
         return list(obj.ingredients.values_list('name', flat=True))
@@ -64,5 +57,3 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ["id", "user", "recipe", "rating", "review_text", "timestamp"]
-=======
->>>>>>> Stashed changes
