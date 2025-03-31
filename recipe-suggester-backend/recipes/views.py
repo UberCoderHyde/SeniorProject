@@ -61,7 +61,7 @@ class RecipeListMinimalView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        queryset = Recipe.objects.all().prefetch_related('ingredients')
+        queryset = Recipe.objects.all()
         if self.request.query_params.get('random') == 'true':
             # Get all IDs quickly.
             recipe_ids = list(queryset.values_list('id', flat=True))

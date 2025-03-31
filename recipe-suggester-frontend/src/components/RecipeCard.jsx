@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 
 const RecipeCard = ({ recipe }) => {
-  const { id, title, image, ingredients } = recipe;
+  const { id, title, image, cleaned_ingredients = [] } = recipe;
 
   return (
     <div className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
@@ -16,7 +16,7 @@ const RecipeCard = ({ recipe }) => {
       <div className="p-4">
         <h2 className="text-xl font-bold text-primary mb-2">{title}</h2>
         <p className="text-gray-300 text-sm">
-          {ingredients.join(", ")}
+          {cleaned_ingredients.map((ing) => ing.name).join(", ")}
         </p>
         <Link
           to={`/recipes/${id}`}

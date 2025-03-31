@@ -12,7 +12,20 @@ const getAuthHeaders = () => {
         "Content-Type": "application/json",
       };
 };
-
+export const fetchRecipeById = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/${id}/`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch recipe");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 export const fetchIngredients = async () => {
   const response = await fetch(`${API_BASE_URL}/ingredients/`, {
     headers: getAuthHeaders(),
@@ -38,20 +51,6 @@ export const fetchRecipes = async () => {
   }
 };
 
-export const fetchRecipeById = async (id) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/recipes/${id}/`, {
-      headers: getAuthHeaders(),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to fetch recipe");
-    }
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
 
 export const fetchPantryItems = async () => {
   try {

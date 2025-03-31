@@ -3,7 +3,8 @@ from .models import Ingredient, PantryItem, Recipe, RecipeIngredient, Review
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ['id', 'name', 'unit', 'description']
+        fields = ['id', 'name']
+
 
 class PantryItemSerializer(serializers.ModelSerializer):
     ingredient = IngredientSerializer(read_only=True)
@@ -15,29 +16,23 @@ class PantryItemSerializer(serializers.ModelSerializer):
         model = PantryItem
         fields = ['id', 'ingredient', 'ingredient_id']
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
-    ingredient = IngredientSerializer(read_only=True)
-
-    class Meta:
-        model = RecipeIngredient
-        fields = ['ingredient', 'quantity']
 
 class RecipeSerializer(serializers.ModelSerializer):
-    recipe_ingredients = RecipeIngredientSerializer(many=True, read_only=True)
-    image = serializers.ImageField(required=False)  # Updated field name
+    image = serializers.ImageField(required=False)
+    cleaned_ingredients = IngredientSerializer(many=True, read_only=True)
 
     class Meta:
         model = Recipe
-        # Replace image_url with image
-        fields = ['id', 'title', 'instructions', 'image', 'recipe_ingredients']
- 
+        fields = ['id', 'title', 'instructions', 'image', 'recipeIngred', 'cleaned_ingredients']
+
+
 class RecipeListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
-    ingredients = serializers.SerializerMethodField()
+    cleaned_ingredients = IngredientSerializer(many=True, read_only=True)
 
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'image', 'ingredients']
+        fields = ['id', 'title', 'image', 'cleaned_ingredients']
 
     def get_image(self, obj):
         request = self.context.get('request')

@@ -1,15 +1,15 @@
 import csv
-import ast
 import os
 import sys
+import ast
 import django
 from django.core.files import File
 
-# Set up Django environment – update with your project settings.
+# Set up Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 django.setup()
 
-from recipes.models import Ingredient, Recipe, RecipeIngredient
+from recipes.models import Recipe
 
 def find_image_file(image_directory, image_name):
     """
@@ -17,13 +17,9 @@ def find_image_file(image_directory, image_name):
     If image_name has no extension, it tries common extensions.
     """
     base_path = os.path.join(image_directory, image_name)
-    # Check if the provided image_name already has an extension.
-    if os.path.splitext(image_name)[1]:
-        if os.path.exists(base_path):
-            return base_path
-        return None
+    if os.path.splitext(image_name)[1]:  # Already has extension
+        return base_path if os.path.exists(base_path) else None
 
-    # List of common image extensions to try.
     for ext in ['.jpg', '.jpeg', '.png', '.gif']:
         candidate = base_path + ext
         if os.path.exists(candidate):
@@ -32,57 +28,57 @@ def find_image_file(image_directory, image_name):
 
 def import_recipes(csv_filepath, image_directory):
     """
-    Reads a CSV file with recipe data (including an Image_Name column) and
-    creates/updates Recipe objects along with associated Ingredients and RecipeIngredients.
-    It then checks for a matching image file in the provided image_directory,
-    and if found, uploads it to the recipe's ImageField.
+    Imports recipes from a CSV with cleaned ingredient strings and optional image names.
     """
     with open(csv_filepath, newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            title = row['Title'].strip()
-            instructions = row['Instructions'].strip()
-            image_name = row['Image_Name'].strip()  # may not include an extension
-            
-            # Create or update the Recipe.
+            title = row.get('Title', '').strip()
+            instructions = row.get('Instructions', '').strip()
+            image_name = row.get('Image_Name', '').strip()
+
+            if not title:
+                print("⚠️ Skipping row with missing title.")
+                continue
+
+            # Create or update the Recipe
             recipe_obj, created = Recipe.objects.get_or_create(
                 title=title,
                 defaults={'instructions': instructions}
             )
             if not created:
                 recipe_obj.instructions = instructions
-                recipe_obj.save()
-            
-            # Process the Cleaned_Ingredients column.
+
+            # Parse Cleaned_Ingredients and store in recipeIngred
+            cleaned_raw = row.get('Cleaned_Ingredients', '').strip()
             try:
-                cleaned_ingredients = ast.literal_eval(row['Cleaned_Ingredients'])
+                cleaned_list = ast.literal_eval(cleaned_raw)
+                if isinstance(cleaned_list, list):
+                    recipe_obj.recipeIngred = '\n'.join(cleaned_list)
+                else:
+                    raise ValueError("Parsed Cleaned_Ingredients is not a list.")
             except Exception as e:
-                print(f"Error parsing Cleaned_Ingredients for '{title}': {e}")
-                cleaned_ingredients = []
-            
-            for ingredient_str in cleaned_ingredients:
-                ingredient_str = ingredient_str.strip()
-                ingredient_obj, _ = Ingredient.objects.get_or_create(name=ingredient_str)
-                RecipeIngredient.objects.get_or_create(
-                    recipe=recipe_obj,
-                    ingredient=ingredient_obj,
-                    defaults={'quantity': 1.0}  # using a default quantity
-                )
-            
-            # Attempt to find and upload the image file.
+                print(f"❌ Error parsing ingredients for '{title}': {e}")
+                recipe_obj.recipeIngred = ''
+
+            recipe_obj.save()
+
+            # Attach image if not already present
             image_filepath = find_image_file(image_directory, image_name)
             if image_filepath:
-                # Only upload if the recipe doesn't already have an image.
-                if not recipe_obj.image:
+                if not recipe_obj.image or not recipe_obj.image.name:
                     with open(image_filepath, 'rb') as f:
                         recipe_obj.image.save(os.path.basename(image_filepath), File(f), save=True)
-                    print(f"Uploaded image for recipe: {title}")
+                    print(f"✅ Uploaded image for '{title}'")
                 else:
-                    print(f"Recipe '{title}' already has an image.")
+                    print(f"📌 '{title}' already has an image.")
             else:
-                print(f"Image file not found for recipe '{title}': expected at {os.path.join(image_directory, image_name)} or with a common extension")
-            
-            print(f"Imported recipe: {title}")
+                if image_name:
+                    print(f"🚫 Image not found for '{title}': tried '{image_name}' in {image_directory}")
+                else:
+                    print(f"ℹ️ No image provided for '{title}'")
+
+            print(f"✔️ Imported: {title}")
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

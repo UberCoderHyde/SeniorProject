@@ -30,3 +30,4 @@ idna==3.6
 pytz==2023.3.post1  # Timezone support
 tzdata==2023.4  # Timezone data
 six==1.16.0  # Required for compatibility in some libraries
+rapidfuzz
