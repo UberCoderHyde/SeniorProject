@@ -1,38 +1,55 @@
-import React, { useEffect, useState } from "react";
-import RecipeCard from "../components/RecipeCard";
-import { getAuthHeaders } from "../services/ingredientService"; // Ensure this helper is available.
-const API_BASE_URL = "http://localhost:8000/api";
+import React, { useState } from "react";
+import RecipeCarousel from "../components/RecipeCarousel";
 
 const Recipes = () => {
-  const [recipes, setRecipes] = useState([]);
-
-  useEffect(() => {
-    const fetchMinimalRecipes = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/recipes/minimal/?random=true`, {
-          headers: getAuthHeaders(),
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch minimal recipes");
-        }
-        const data = await response.json();
-        setRecipes(data);
-      } catch (error) {
-        console.error("Error fetching minimal recipes: ", error);
-      }
-    };
-
-    fetchMinimalRecipes();
-  }, []);
+  // State for the dietary filter (can be expanded to include more filters)
+  const [dietFilter, setDietFilter] = useState("vegetarian");
 
   return (
     <div className="container mx-auto p-6">
       <h1 className="text-4xl font-bold text-primary mb-6">Recipes</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recipes.map((recipe) => (
-          <RecipeCard key={recipe.id} recipe={recipe} />
-        ))}
+
+      {/* Recommended Carousel: fetching random recipes */}
+      <RecipeCarousel
+        title="Recommended"
+        endpoint="recipes/minimal/"
+        queryParams={{ random: "true" }}
+      />
+
+      {/* Trending Carousel: backend should filter trending recipes if implemented */}
+      <RecipeCarousel
+        title="Trending"
+        endpoint="recipes/minimal/"
+        queryParams={{ trending: "true" }}
+      />
+
+      {/* Dietary Carousel: includes a dropdown for dietary filtering */}
+      <div className="mb-4">
+        <label className="mr-2">Dietary Filter:</label>
+        <select
+          value={dietFilter}
+          onChange={(e) => setDietFilter(e.target.value)}
+          className="border border-gray-300 rounded px-2 py-1"
+        >
+          <option value="vegetarian">Vegetarian</option>
+          <option value="vegan">Vegan</option>
+          <option value="gluten-free">Gluten-Free</option>
+          <option value="keto">Keto</option>
+          {/* Add additional options as needed */}
+        </select>
       </div>
+      <RecipeCarousel
+        title="Dietary"
+        endpoint="recipes/minimal/"
+        queryParams={{ diet: dietFilter }}
+      />
+
+      {/* Favorites Carousel: requires an authenticated user */}
+      <RecipeCarousel
+        title="Favorites"
+        endpoint="recipes/favorites/"
+        queryParams={{}}
+      />
     </div>
   );
 };

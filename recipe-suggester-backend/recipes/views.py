@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions
 from django.db.models import Q
-from .models import Ingredient, PantryItem, Recipe, Review
+from .models import Ingredient, PantryItem, Recipe, Review  # plus FavoriteRecipe if you have one
 from .serializers import (
     IngredientSerializer, PantryItemSerializer, RecipeSerializer,
     RecipeListSerializer, ReviewSerializer
@@ -24,6 +24,7 @@ class PantryItemListCreate(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         ingredient = serializer.validated_data.get("ingredient")
+        # Avoid duplicate pantry items for the user.
         if PantryItem.objects.filter(user=self.request.user, ingredient=ingredient).exists():
             return
         serializer.save(user=self.request.user)
@@ -41,9 +42,9 @@ class RecipeListCreate(generics.ListCreateAPIView):
 
     def get_queryset(self):
         queryset = Recipe.objects.all()
-        # Check for a query parameter to search by title or ingredient name.
         query = self.request.query_params.get('query')
         if query:
+            # Search recipes by title or by one of its ingredients.
             queryset = queryset.filter(
                 Q(title__icontains=query) | Q(ingredients__name__icontains=query)
             ).distinct()
@@ -58,9 +59,8 @@ class RecipeRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
 
 class RecipeListMinimalView(generics.ListAPIView):
     """
-    Returns a minimal list of recipes (id, title, image, ingredients)
-    for faster loading. Supports a 'random=true' query parameter to return 20 random recipes,
-    and now also supports a 'query' parameter to search.
+    Returns a minimal list of recipes (id, title, image, ingredients) for faster loading.
+    Supports 'random=true', 'query', and dietary filters.
     """
     serializer_class = RecipeListSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -77,8 +77,13 @@ class RecipeListMinimalView(generics.ListAPIView):
             if len(recipe_ids) > 20:
                 random_ids = random.sample(recipe_ids, 20)
                 queryset = queryset.filter(id__in=random_ids)
+        elif self.request.query_params.get('diet'):
+            # Assuming your Recipe model or related data contains dietary info
+            diet = self.request.query_params.get('diet')
+            queryset = queryset.filter(dietary__icontains=diet).distinct()
         return queryset
 
+# View for Reviews remains unchanged.
 class ReviewListCreate(generics.ListCreateAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
@@ -91,3 +96,10 @@ class ReviewListCreate(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         recipe_id = self.kwargs["recipe_id"]
         serializer.save(user=self.request.user, recipe_id=recipe_id)
+
+class RecipeFavoritesList(generics.ListAPIView):
+    serializer_class = RecipeListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return self.request.user.favorite_recipes.all()
