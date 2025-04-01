@@ -45,7 +45,7 @@ const RecipeCarousel = ({ title, endpoint, queryParams = {} }) => {
 
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      <h2 className="text-gray-300 text-2xl font-bold mb-4">{title}</h2>
       {loading && <p>Loading...</p>}
       {error && <p className="text-red-500">{error}</p>}
       <div className="flex space-x-4 overflow-x-auto pb-2">

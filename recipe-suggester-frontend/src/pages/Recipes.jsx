@@ -7,7 +7,7 @@ const Recipes = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-4xl font-bold text-primary mb-6">Recipes</h1>
+      <h1 className="  text-4xl font-bold text-primary mb-6">Recipes</h1>
 
       {/* Recommended Carousel: fetching random recipes */}
       <RecipeCarousel
