@@ -1,6 +1,7 @@
 # models.py
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.conf import settings
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=1000, unique=True)
@@ -14,6 +15,19 @@ class Ingredient(models.Model):
     def __str__(self):
         return self.name
 
+class PantryItem(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="pantry_items"
+    )
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('user', 'ingredient')
+
+    def __str__(self):
+        return f"{self.ingredient.name}"
+
 class Recipe(models.Model):
     title = models.CharField(max_length=1000)
     instructions = models.TextField()
@@ -23,13 +37,11 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
-
     @property
     def cleaned_ingredients(self):
         from rapidfuzz import fuzz, process
         import re
         from .models import Ingredient
-
         lines = self.recipeIngred.lower().split('\n')
         known_ingredients = [name.lower() for name in Ingredient.objects.values_list('name', flat=True)]
         matched_ingredients = []

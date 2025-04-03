@@ -1,55 +1,116 @@
-import React, { useState } from "react";
+// src/pages/Recipes.jsx
+import React, { useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import RecipeCard from "../components/RecipeCard";
 import RecipeCarousel from "../components/RecipeCarousel";
 
+const dietaryOptions = ["vegan", "vegetarian", "keto_friendly", "nut_free"];
+
 const Recipes = () => {
-  // State for the dietary filter (can be expanded to include more filters)
-  const [dietFilter, setDietFilter] = useState("vegetarian");
+  const [trending, setTrending] = useState([]);
+  const [dietary, setDietary] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [diet, setDiet] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Fetch trending recipes
+  useEffect(() => {
+    fetch("/api/recipes/minimal/?trending=true")
+      .then((res) => res.json())
+      .then(setTrending);
+  }, []);
+
+  // Fetch dietary filtered recipes
+  useEffect(() => {
+    if (diet) {
+      fetch(`/api/recipes/minimal/?diet=${diet}`)
+        .then((res) => res.json())
+        .then(setDietary);
+    } else {
+      setDietary([]);
+    }
+  }, [diet]);
+
+  // Fetch favorites
+  useEffect(() => {
+    fetch("/api/recipes/minimal/?favorite=true")
+      .then((res) => res.json())
+      .then(setFavorites);
+  }, []);
+
+  const handleDietChange = (e) => {
+    const selected = e.target.value;
+    setDiet(selected);
+    setSearchParams({ diet: selected });
+  };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="  text-4xl font-bold text-primary mb-6">Recipes</h1>
+    <div className="container mx-auto px-6 py-8 text-gray-100">
+      <h1 className="text-4xl font-bold text-primary mb-6">Explore Recipes</h1>
 
-      {/* Recommended Carousel: fetching random recipes */}
-      <RecipeCarousel
-        title="Recommended"
-        endpoint="recipes/minimal/"
-        queryParams={{ random: "true" }}
-      />
-
-      {/* Trending Carousel: backend should filter trending recipes if implemented */}
-      <RecipeCarousel
-        title="Trending"
-        endpoint="recipes/minimal/"
-        queryParams={{ trending: "true" }}
-      />
-
-      {/* Dietary Carousel: includes a dropdown for dietary filtering */}
-      <div className="mb-4">
-        <label className="mr-2">Dietary Filter:</label>
+      <div className="mb-6 flex gap-4 items-center">
+        <label className="text-lg">Filter by Diet:</label>
         <select
-          value={dietFilter}
-          onChange={(e) => setDietFilter(e.target.value)}
-          className="border border-gray-300 rounded px-2 py-1"
+          value={diet}
+          onChange={handleDietChange}
+          className="bg-black border border-gray-600 px-4 py-2 rounded text-white"
         >
-          <option value="vegetarian">Vegetarian</option>
-          <option value="vegan">Vegan</option>
-          <option value="gluten-free">Gluten-Free</option>
-          <option value="keto">Keto</option>
-          {/* Add additional options as needed */}
+          <option value="">All</option>
+          {dietaryOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+            </option>
+          ))}
         </select>
       </div>
-      <RecipeCarousel
-        title="Dietary"
-        endpoint="recipes/minimal/"
-        queryParams={{ diet: dietFilter }}
-      />
 
-      {/* Favorites Carousel: requires an authenticated user */}
-      <RecipeCarousel
-        title="Favorites"
-        endpoint="recipes/favorites/"
-        queryParams={{}}
-      />
+      {/* Trending Section */}
+      <section className="mb-12">
+        <h2 className="text-2xl font-semibold mb-4">Trending Recipes</h2>
+        <RecipeCarousel recipes={trending} />
+        <div className="mt-4 text-center">
+          <Link
+            to="/recipes/browse?sort=trending&page=1"
+            className="bg-accent text-white px-6 py-2 rounded hover:bg-highlight transition"
+          >
+            See More Trending
+          </Link>
+        </div>
+      </section>
+
+      {/* Dietary Filtered Section */}
+      {diet && (
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">
+            Showing: {diet.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+          </h2>
+          <RecipeCarousel recipes={dietary} />
+          <div className="mt-4 text-center">
+            <Link
+              to={`/recipes/browse?diet=${diet}&page=1`}
+              className="bg-accent text-white px-6 py-2 rounded hover:bg-highlight transition"
+            >
+              See More {diet.replace("_", " ")}
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* Favorites Section */}
+      {favorites.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">Your Favorites</h2>
+          <RecipeCarousel recipes={favorites} />
+          <div className="mt-4 text-center">
+            <Link
+              to="/recipes/browse?favorite=true&page=1"
+              className="bg-accent text-white px-6 py-2 rounded hover:bg-highlight transition"
+            >
+              See All Favorites
+            </Link>
+          </div>
+        </section>
+      )}
     </div>
   );
 };

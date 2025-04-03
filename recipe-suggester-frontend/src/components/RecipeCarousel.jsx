@@ -1,56 +1,40 @@
-import React, { useEffect, useState } from "react";
+// src/components/RecipeCarousel.jsx
+import React, { useRef } from "react";
 import RecipeCard from "./RecipeCard";
-import { getAuthHeaders } from "../services/ingredientService"; // Ensure this helper is available.
 
-const API_BASE_URL = "http://localhost:8000/api";
+const RecipeCarousel = ({ recipes }) => {
+  const scrollRef = useRef();
 
-const RecipeCarousel = ({ title, endpoint, queryParams = {} }) => {
-  const [recipes, setRecipes] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Build the URL with query parameters.
-  const buildUrl = () => {
-    const url = new URL(`${API_BASE_URL}/${endpoint}`);
-    Object.keys(queryParams).forEach((key) =>
-      url.searchParams.append(key, queryParams[key])
-    );
-    return url.toString();
+  const scroll = (dir) => {
+    if (scrollRef.current) {
+      const width = scrollRef.current.offsetWidth;
+      scrollRef.current.scrollBy({ left: dir === "left" ? -width : width, behavior: "smooth" });
+    }
   };
 
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const url = buildUrl();
-        const response = await fetch(url, {
-          headers: getAuthHeaders(),
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch recipes");
-        }
-        const data = await response.json();
-        setRecipes(data);
-      } catch (err) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRecipes();
-  }, [endpoint, JSON.stringify(queryParams)]);
-
   return (
-    <div className="mb-8">
-      <h2 className="text-gray-300 text-2xl font-bold mb-4">{title}</h2>
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-500">{error}</p>}
-      <div className="flex space-x-4 overflow-x-auto pb-2">
+    <div className="relative">
+      {/* Scroll Buttons */}
+      <button
+        onClick={() => scroll("left")}
+        className="absolute top-1/2 left-0 z-10 -translate-y-1/2 bg-black bg-opacity-50 text-white px-3 py-2 rounded-l hover:bg-opacity-80"
+      >
+        ◀
+      </button>
+      <button
+        onClick={() => scroll("right")}
+        className="absolute top-1/2 right-0 z-10 -translate-y-1/2 bg-black bg-opacity-50 text-white px-3 py-2 rounded-r hover:bg-opacity-80"
+      >
+        ▶
+      </button>
+
+      {/* Carousel Content */}
+      <div
+        ref={scrollRef}
+        className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x pb-4 px-8"
+      >
         {recipes.map((recipe) => (
-          <div key={recipe.id} className="min-w-[250px]">
+          <div key={recipe.id} className="snap-start shrink-0 w-[300px]">
             <RecipeCard recipe={recipe} />
           </div>
         ))}
