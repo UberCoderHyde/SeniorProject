@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import RecipeCard from "./RecipeCard";
 
-const RecipeCarousel = ({ recipes }) => {
+const RecipeCarousel = ({ recipes, onToggleFavorite, favorites = new Set() }) => {
   const scrollRef = useRef();
 
   const scroll = (dir) => {
@@ -9,6 +9,12 @@ const RecipeCarousel = ({ recipes }) => {
       const width = scrollRef.current.offsetWidth;
       scrollRef.current.scrollBy({ left: dir === "left" ? -width : width, behavior: "smooth" });
     }
+  };
+
+  const isFavoriteFn = (id) => {
+    if (favorites instanceof Set) return favorites.has(id);
+    if (Array.isArray(favorites)) return favorites.includes(id);
+    return false;
   };
 
   if (!recipes || recipes.length === 0) {
@@ -40,7 +46,11 @@ const RecipeCarousel = ({ recipes }) => {
       >
         {recipes.map((recipe) => (
           <div key={recipe.id} className="snap-start shrink-0 w-[300px]">
-            <RecipeCard recipe={recipe} />
+            <RecipeCard
+              recipe={recipe}
+              onToggleFavorite={onToggleFavorite}
+              isFavorite={isFavoriteFn(recipe.id)}
+            />
           </div>
         ))}
       </div>

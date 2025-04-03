@@ -3,17 +3,19 @@ import { Link, useSearchParams } from "react-router-dom";
 import RecipeCard from "../components/RecipeCard";
 import RecipeCarousel from "../components/RecipeCarousel";
 import { API_BASE_URL } from "../config";
+import { toggleFavorite } from "../services/recipeService";
 
 const dietaryOptions = ["vegan", "vegetarian", "keto_friendly", "nut_free"];
 
 const Recipes = () => {
   const [trending, setTrending] = useState([]);
   const [dietary, setDietary] = useState([]);
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(new Set());
   const [random, setRandom] = useState([]);
   const [diet, setDiet] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Fetch trending
   useEffect(() => {
     fetch(`${API_BASE_URL}/recipes/minimal/?trending=true`)
       .then((res) => res.json())
@@ -21,6 +23,7 @@ const Recipes = () => {
       .catch(console.error);
   }, []);
 
+  // Fetch random
   useEffect(() => {
     fetch(`${API_BASE_URL}/recipes/minimal/?random=true`)
       .then((res) => res.json())
@@ -28,6 +31,7 @@ const Recipes = () => {
       .catch(console.error);
   }, []);
 
+  // Fetch diet-specific
   useEffect(() => {
     if (diet) {
       fetch(`${API_BASE_URL}/recipes/minimal/?diet=${diet}`)
@@ -39,10 +43,18 @@ const Recipes = () => {
     }
   }, [diet]);
 
+  // Fetch favorites
   useEffect(() => {
-    fetch(`${API_BASE_URL}/recipes/minimal/?favorite=true`)
+    fetch(`${API_BASE_URL}/recipes/minimal/?favorite=true`, {
+      headers: {
+        "Authorization": `Token ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+    })
       .then((res) => res.json())
-      .then(setFavorites)
+      .then((data) => {
+        setFavorites(new Set(data.map((r) => r.id)));
+      })
       .catch(console.error);
   }, []);
 
@@ -50,6 +62,23 @@ const Recipes = () => {
     const selected = e.target.value;
     setDiet(selected);
     setSearchParams({ diet: selected });
+  };
+
+  const handleToggleFavorite = async (recipeId) => {
+    try {
+      await toggleFavorite(recipeId);
+      setFavorites((prev) => {
+        const updated = new Set(prev);
+        if (updated.has(recipeId)) {
+          updated.delete(recipeId);
+        } else {
+          updated.add(recipeId);
+        }
+        return new Set(updated);
+      });
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+    }
   };
 
   return (
@@ -72,10 +101,14 @@ const Recipes = () => {
         </select>
       </div>
 
-      {/* Trending Section */}
+      {/* Trending */}
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Trending Recipes</h2>
-        <RecipeCarousel recipes={trending} />
+        <RecipeCarousel
+          recipes={trending}
+          onToggleFavorite={handleToggleFavorite}
+          favorites={favorites}
+        />
         <div className="mt-4 text-center">
           <Link
             to="/recipes/browse?sort=trending&page=1"
@@ -86,11 +119,15 @@ const Recipes = () => {
         </div>
       </section>
 
-      {/* Random Section */}
+      {/* Random */}
       {random.length > 0 && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Random Recipes</h2>
-          <RecipeCarousel recipes={random} />
+          <RecipeCarousel
+            recipes={random}
+            onToggleFavorite={handleToggleFavorite}
+            favorites={favorites}
+          />
           <div className="mt-4 text-center">
             <Link
               to="/recipes/browse?random=true&page=1"
@@ -102,13 +139,17 @@ const Recipes = () => {
         </section>
       )}
 
-      {/* Dietary Filtered Section */}
+      {/* Dietary */}
       {diet && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">
             Showing: {diet.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}
           </h2>
-          <RecipeCarousel recipes={dietary} />
+          <RecipeCarousel
+            recipes={dietary}
+            onToggleFavorite={handleToggleFavorite}
+            favorites={favorites}
+          />
           <div className="mt-4 text-center">
             <Link
               to={`/recipes/browse?diet=${diet}&page=1`}
@@ -120,11 +161,15 @@ const Recipes = () => {
         </section>
       )}
 
-      {/* Favorites Section */}
-      {favorites.length > 0 && (
+      {/* Favorites */}
+      {favorites.size > 0 && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Your Favorites</h2>
-          <RecipeCarousel recipes={favorites} />
+          <RecipeCarousel
+            recipes={[...trending, ...random, ...dietary].filter((r) => favorites.has(r.id))}
+            onToggleFavorite={handleToggleFavorite}
+            favorites={favorites}
+          />
           <div className="mt-4 text-center">
             <Link
               to="/recipes/browse?favorite=true&page=1"

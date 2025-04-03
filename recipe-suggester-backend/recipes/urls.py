@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     IngredientListCreate, PantryItemListCreate, PantryItemRetrieveUpdateDelete,
     RecipeListCreate, RecipeListPaginatedByDiet, RecipeRetrieveUpdateDelete, RecipeListMinimalView,
-    ReviewListCreate, RecipeFavoritesList, BrowseRecipesView
+    ReviewListCreate, RecipeFavoritesList, BrowseRecipesView, toggle_favorite
 )
 
 urlpatterns = [
@@ -16,4 +16,5 @@ urlpatterns = [
     path("recipes/favorites/", RecipeFavoritesList.as_view(), name="recipe-favorites"),
     path('recipes/paginated/', RecipeListPaginatedByDiet.as_view(), name='paginated-recipes'),
     path('recipes/browse/', BrowseRecipesView.as_view(), name='browse-recipes'),
+    path('recipes/<int:recipe_id>/toggle-favorite/', toggle_favorite, name='toggle-favorite'),
 ]

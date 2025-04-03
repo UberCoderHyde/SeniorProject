@@ -103,3 +103,19 @@ export const fetchPaginatedRecipes = async ({ diet, favorite, random, sort, page
 
   return await response.json();
 };
+export const toggleFavorite = async (recipeId) => {
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/toggle-favorite/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Token ${token}` }),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to toggle favorite");
+  }
+
+  return response.json();
+};

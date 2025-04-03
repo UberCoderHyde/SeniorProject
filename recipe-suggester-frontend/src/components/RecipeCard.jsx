@@ -1,9 +1,17 @@
+// src/components/RecipeCard.jsx
 import React from "react";
 import { Link } from "react-router-dom";
 import { FaStar, FaHeart, FaRegHeart } from "react-icons/fa";
 
-const RecipeCard = ({ recipe, onToggleFavorite, isFavorite }) => {
-  const { id, title, image, cleaned_ingredients = [], average_rating = 0, review_count = 0 } = recipe;
+const RecipeCard = ({ recipe, onToggleFavorite = () => {}, isFavorite = false }) => {
+  const {
+    id,
+    title,
+    image,
+    cleaned_ingredients = [],
+    average_rating = 0,
+    review_count = 0,
+  } = recipe;
 
   const renderStars = () => {
     const stars = [];
@@ -32,7 +40,7 @@ const RecipeCard = ({ recipe, onToggleFavorite, isFavorite }) => {
             {renderStars()}
             <span className="text-sm text-gray-400">({review_count})</span>
           </div>
-          <button onClick={() => onToggleFavorite(id)}>
+          <button onClick={() => onToggleFavorite(recipe.id)}>
             {isFavorite ? (
               <FaHeart className="text-red-500" />
             ) : (
@@ -46,7 +54,6 @@ const RecipeCard = ({ recipe, onToggleFavorite, isFavorite }) => {
         >
           View Recipe
         </Link>
-
       </div>
     </div>
   );

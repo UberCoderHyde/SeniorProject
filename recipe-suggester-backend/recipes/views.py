@@ -1,14 +1,32 @@
 # views.py
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from .models import Ingredient, PantryItem, Recipe, Review
 from .serializers import IngredientSerializer, PantryItemSerializer, RecipeSerializer, RecipeListSerializer, ReviewSerializer
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from rest_framework.decorators import api_view,permission_classes
+from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.cache import cache
 from django.db.models import Avg, Count
 import random
 
+
+@api_view(["POST"])
+@permission_classes([permissions.IsAuthenticated])
+def toggle_favorite(request, recipe_id):
+    try:
+        recipe = Recipe.objects.get(id=recipe_id)
+    except Recipe.DoesNotExist:
+        return Response({"detail": "Recipe not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    user = request.user
+    if recipe in user.favorite_recipes.all():
+        user.favorite_recipes.remove(recipe)
+        return Response({"favorited": False})
+    else:
+        user.favorite_recipes.add(recipe)
+        return Response({"favorited": True})
 class IngredientListCreate(generics.ListCreateAPIView):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
