@@ -21,19 +21,29 @@ class PantryItemSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False)
     cleaned_ingredients = IngredientSerializer(many=True, read_only=True)
+    average_rating = serializers.FloatField(read_only=True)
+    review_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'instructions', 'image', 'recipeIngred', 'cleaned_ingredients']
+        fields = [
+            'id', 'title', 'instructions', 'image', 'recipeIngred',
+            'cleaned_ingredients', 'average_rating', 'review_count'
+        ]
 
 
 class RecipeListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     cleaned_ingredients = IngredientSerializer(many=True, read_only=True)
+    average_rating = serializers.FloatField(read_only=True)
+    review_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'image', 'cleaned_ingredients']
+        fields = [
+            'id', 'title', 'image', 'cleaned_ingredients',
+            'average_rating', 'review_count'
+        ]
 
     def get_image(self, obj):
         request = self.context.get('request')
@@ -43,17 +53,10 @@ class RecipeListSerializer(serializers.ModelSerializer):
             return obj.image.url
         return None
 
-    def get_ingredients(self, obj):
-        return list(obj.ingredients.values_list('name', flat=True))
-    
 
 class ReviewSerializer(serializers.ModelSerializer):
-    # Show user's email for the user field
-    # Might have to change could just link to user and then show user email so that it can be later edited by user
     user = serializers.ReadOnlyField(source="user.email")
-
-    # Don't nest the recipe field with the full recipe object
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all(), write_only=True)
+    recipe = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Review

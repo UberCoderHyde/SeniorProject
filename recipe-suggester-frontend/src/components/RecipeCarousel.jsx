@@ -1,4 +1,3 @@
-// src/components/RecipeCarousel.jsx
 import React, { useRef } from "react";
 import RecipeCard from "./RecipeCard";
 
@@ -12,9 +11,16 @@ const RecipeCarousel = ({ recipes }) => {
     }
   };
 
+  if (!recipes || recipes.length === 0) {
+    return (
+      <div className="text-center text-gray-400 py-4">
+        No recipes found for this category.
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
-      {/* Scroll Buttons */}
       <button
         onClick={() => scroll("left")}
         className="absolute top-1/2 left-0 z-10 -translate-y-1/2 bg-black bg-opacity-50 text-white px-3 py-2 rounded-l hover:bg-opacity-80"
@@ -28,7 +34,6 @@ const RecipeCarousel = ({ recipes }) => {
         ▶
       </button>
 
-      {/* Carousel Content */}
       <div
         ref={scrollRef}
         className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x pb-4 px-8"

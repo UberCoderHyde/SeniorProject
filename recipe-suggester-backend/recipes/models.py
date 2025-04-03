@@ -66,20 +66,42 @@ class Recipe(models.Model):
 
     def compute_dietary_tags(self):
         tags = set()
+        is_vegan = True
+        is_vegetarian = True
+        is_nut_free = True
+        is_keto = True
+
         for ing in self.cleaned_ingredients:
             if ing.is_meat:
                 tags.add('contains_meat')
+                is_vegan = False
+                is_vegetarian = False
             if ing.is_dairy:
                 tags.add('contains_dairy')
+                is_vegan = False
             if ing.contains_gluten:
                 tags.add('contains_gluten')
             if not ing.is_vegan_safe:
                 tags.add('not_vegan')
+                is_vegan = False
             if not ing.is_nut_free:
                 tags.add('contains_nuts')
-            if ing.is_keto_friendly:
-                tags.add('keto_friendly')
+                is_nut_free = False
+            if not ing.is_keto_friendly:
+                is_keto = False
+
+        # Add positive tags so filtering works
+        if is_vegan:
+            tags.add('vegan')
+        if is_vegetarian:
+            tags.add('vegetarian')
+        if is_nut_free:
+            tags.add('nut_free')
+        if is_keto:
+            tags.add('keto_friendly')
+
         return list(tags)
+
 
     def save(self, *args, **kwargs):
         self.dietary_tags = self.compute_dietary_tags()

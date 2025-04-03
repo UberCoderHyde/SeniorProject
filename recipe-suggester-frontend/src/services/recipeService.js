@@ -1,7 +1,7 @@
 const API_BASE_URL = "http://localhost:8000/api";
 
 // Helper function to get the token from localStorage
-const getAuthHeaders = () => {
+export const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return token
     ? {
@@ -82,4 +82,24 @@ export const addPantryItem = async ({ ingredient_id, quantity }) => {
     console.error("Error in addPantryItem:", error);
     throw error;
   }
+};
+
+export const fetchPaginatedRecipes = async ({ diet, favorite, random, sort, page = 1 }) => {
+  const params = new URLSearchParams();
+
+  if (diet) params.append("diet", diet);
+  if (favorite) params.append("favorite", "true");
+  if (random) params.append("random", "true");
+  if (sort) params.append("sort", sort);
+  params.append("page", page);
+
+  const response = await fetch(`${API_BASE_URL}/recipes/browse/?${params.toString()}`, {
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch paginated recipes");
+  }
+
+  return await response.json();
 };

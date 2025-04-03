@@ -1,8 +1,8 @@
-// src/pages/Recipes.jsx
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import RecipeCard from "../components/RecipeCard";
 import RecipeCarousel from "../components/RecipeCarousel";
+import { API_BASE_URL } from "../config";
 
 const dietaryOptions = ["vegan", "vegetarian", "keto_friendly", "nut_free"];
 
@@ -10,32 +10,40 @@ const Recipes = () => {
   const [trending, setTrending] = useState([]);
   const [dietary, setDietary] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [random, setRandom] = useState([]);
   const [diet, setDiet] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Fetch trending recipes
   useEffect(() => {
-    fetch("/api/recipes/minimal/?trending=true")
+    fetch(`${API_BASE_URL}/recipes/minimal/?trending=true`)
       .then((res) => res.json())
-      .then(setTrending);
+      .then(setTrending)
+      .catch(console.error);
   }, []);
 
-  // Fetch dietary filtered recipes
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/recipes/minimal/?random=true`)
+      .then((res) => res.json())
+      .then(setRandom)
+      .catch(console.error);
+  }, []);
+
   useEffect(() => {
     if (diet) {
-      fetch(`/api/recipes/minimal/?diet=${diet}`)
+      fetch(`${API_BASE_URL}/recipes/minimal/?diet=${diet}`)
         .then((res) => res.json())
-        .then(setDietary);
+        .then(setDietary)
+        .catch(console.error);
     } else {
       setDietary([]);
     }
   }, [diet]);
 
-  // Fetch favorites
   useEffect(() => {
-    fetch("/api/recipes/minimal/?favorite=true")
+    fetch(`${API_BASE_URL}/recipes/minimal/?favorite=true`)
       .then((res) => res.json())
-      .then(setFavorites);
+      .then(setFavorites)
+      .catch(console.error);
   }, []);
 
   const handleDietChange = (e) => {
@@ -77,6 +85,22 @@ const Recipes = () => {
           </Link>
         </div>
       </section>
+
+      {/* Random Section */}
+      {random.length > 0 && (
+        <section className="mb-12">
+          <h2 className="text-2xl font-semibold mb-4">Random Recipes</h2>
+          <RecipeCarousel recipes={random} />
+          <div className="mt-4 text-center">
+            <Link
+              to="/recipes/browse?random=true&page=1"
+              className="bg-accent text-white px-6 py-2 rounded hover:bg-highlight transition"
+            >
+              See More Random
+            </Link>
+          </div>
+        </section>
+      )}
 
       {/* Dietary Filtered Section */}
       {diet && (
