@@ -6,7 +6,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'django-insecure-y#il*9&%5-nlmxs$adote2b40%2%u+bga$d+m6)pl0e6)hyf3i'
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.9']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "97.89.112.225"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -119,6 +119,7 @@ SESSION_COOKIE_SECURE = False     # Use False for local development (HTTP)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
+     "http://97.89.112.225:3000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -126,6 +127,7 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
+     "http://97.89.112.225:3000",
 ]
 CSRF_COOKIE_SECURE = True   # For local development, set this to False if not using HTTPS
 CSRF_COOKIE_HTTPONLY = True

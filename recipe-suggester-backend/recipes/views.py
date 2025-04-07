@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view,permission_classes
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.core.cache import cache
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Q
 import random
 
 
@@ -84,10 +84,22 @@ class RecipeListMinimalView(generics.ListAPIView):
             review_count=Count("reviews")
         )
 
+        search_query = self.request.query_params.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(recipeIngred__icontains=search_query)
+            ).distinct()
         if self.request.query_params.get('diet'):
             diet = self.request.query_params['diet']
             return queryset.filter(dietary_tags__contains=[diet]).distinct()[:20]
-
+        if self.request.query_params.get('trending') == 'true':
+                    cached = cache.get("trending_recipes")
+                    if cached:
+                        return cached
+                    trending = Recipe.objects.annotate(num_reviews=Count('reviews')).order_by('-num_reviews')[:20]
+                    cache.set("trending_recipes", trending, 300)
+                    return trending
         if self.request.query_params.get('favorite') == 'true':
             if self.request.user.is_authenticated:
                 return self.request.user.favorite_recipes.annotate(
@@ -147,7 +159,8 @@ class RecipeListPaginatedByDiet(generics.ListAPIView):
             average_rating=Avg("reviews__rating"),
             review_count=Count("reviews")
         ).order_by('id')
-
+        if self.request.query_params.get('trending') == 'true':
+            queryset = queryset.annotate(num_reviews=Count('reviews')).order_by('-num_reviews')
         diet = self.request.query_params.get('diet')
         if diet:
             queryset = queryset.filter(dietary_tags__contains=[diet])

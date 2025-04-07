@@ -14,7 +14,7 @@ import Profile from "./pages/Profile";
 import Ingredients from "./pages/Ingredients";
 import MyPantry from "./pages/MyPantry";
 import AddPantryItem from "./pages/AddPantryItem";
-
+import PaginatedRecipes from "./pages/PaginationRecipes";
 
 function App() {
   return (
@@ -26,6 +26,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/recipes" element={<Recipes />} />
+            <Route path="/recipes/browse/" element={<PaginatedRecipes />} />
             <Route path="/recipes/:id" element={<RecipeDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

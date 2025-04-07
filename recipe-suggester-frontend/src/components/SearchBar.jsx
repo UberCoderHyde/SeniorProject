@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
@@ -12,14 +13,23 @@ const SearchBar = () => {
     setLoading(true);
     setError(null);
     try {
-      // Adjust the URL if you are using the minimal endpoint or not.
-      const response = await axios.get("/api/recipes/", {
-        params: { query },
+      const response = await axios.get("http://97.89.112.225:8000/api/recipes/minimal/", {
+        params: { search: query },
       });
-      setResults(response.data);
+
+      // Safeguard: ensure we only set an array
+      const data = response.data;
+      if (Array.isArray(data)) {
+        setResults(data);
+      } else if (Array.isArray(data.results)) {
+        setResults(data.results);
+      } else {
+        setResults([]);
+      }
     } catch (err) {
       console.error(err);
       setError("An error occurred while fetching recipes.");
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -42,15 +52,21 @@ const SearchBar = () => {
           Search
         </button>
       </form>
+
       {loading && <p>Loading recipes...</p>}
       {error && <p className="text-red-500">{error}</p>}
+
       <div className="mt-4">
-        {results.length > 0 ? (
+        {Array.isArray(results) && results.length > 0 ? (
           <ul>
             {results.map((recipe) => (
               <li key={recipe.id} className="mb-4">
-                <h3 className="font-bold">{recipe.title}</h3>
-                {/* Optionally render additional recipe details */}
+                <Link
+                  to={`/recipes/${recipe.id}`}
+                  className="block bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded transition"
+                >
+                  {recipe.title}
+                </Link>
               </li>
             ))}
           </ul>

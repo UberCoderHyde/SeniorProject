@@ -44,19 +44,20 @@ const Recipes = () => {
   }, [diet]);
 
   // Fetch favorites
-  useEffect(() => {
-    fetch(`${API_BASE_URL}/recipes/minimal/?favorite=true`, {
-      headers: {
-        "Authorization": `Token ${localStorage.getItem("token")}`,
-        "Content-Type": "application/json",
-      },
+  fetch(`${API_BASE_URL}/recipes/minimal/?favorite=true`, {
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Token ${localStorage.getItem("token")}`,
+    },
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error("Unauthorized or bad response");
+      const data = await res.json();
+      setFavorites(new Set(data.map((r) => r.id)));
     })
-      .then((res) => res.json())
-      .then((data) => {
-        setFavorites(new Set(data.map((r) => r.id)));
-      })
-      .catch(console.error);
-  }, []);
+    .catch((err) => {
+      console.error("Failed to fetch favorites:", err);
+    });
 
   const handleDietChange = (e) => {
     const selected = e.target.value;
