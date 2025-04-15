@@ -5,6 +5,9 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
+
+    # is the user subscribed to the newsletter?
+    is_subscribed = models.BooleanField(default=True)
     
     # Add a many-to-many field for favorite recipes.
     favorite_recipes = models.ManyToManyField(
