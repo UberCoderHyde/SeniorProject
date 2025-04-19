@@ -1,32 +1,49 @@
-// src/pages/Profile.jsx
 import React, { useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
-import { fetchPantryItems } from "../services/ingredientService";
+import {
+  fetchPantryItems,
+  fetchTrendingIngredients,
+} from "../services/ingredientService";
 
 const Profile = () => {
   const { user } = useAuth();
   const [pantryItems, setPantryItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [trendingIngredients, setTrendingIngredients] = useState([]);
+  const [loadingPantry, setLoadingPantry] = useState(true);
+  const [loadingTrending, setLoadingTrending] = useState(true);
   const [error, setError] = useState("");
 
+  // Load pantry items
   useEffect(() => {
-    const getPantryItems = async () => {
+    const loadPantry = async () => {
       try {
         const data = await fetchPantryItems();
         setPantryItems(data);
-      } catch (error) {
-        console.error("Error fetching pantry items:", error);
+      } catch (err) {
+        console.error("Error fetching pantry items:", err);
         setError("Failed to load pantry items.");
       } finally {
-        setLoading(false);
+        setLoadingPantry(false);
       }
     };
+    if (user) loadPantry();
+    else setLoadingPantry(false);
+  }, [user]);
 
-    if (user) {
-      getPantryItems();
-    } else {
-      setLoading(false);
-    }
+  // Load trending ingredients (#53)
+  useEffect(() => {
+    const loadTrending = async () => {
+      try {
+        const data = await fetchTrendingIngredients();
+        setTrendingIngredients(data);
+      } catch (err) {
+        console.error("Error fetching trending ingredients:", err);
+      } finally {
+        setLoadingTrending(false);
+      }
+    };
+    if (user) loadTrending();
+    else setLoadingTrending(false);
   }, [user]);
 
   if (!user) {
@@ -61,18 +78,46 @@ const Profile = () => {
             <p className="text-gray-300">{user.email}</p>
           </div>
         </div>
+
+        {/* My Pantry */}
         <h2 className="text-2xl font-semibold mb-4">My Pantry</h2>
-        {loading ? (
+        {loadingPantry ? (
           <p>Loading pantry items...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : pantryItems.length === 0 ? (
           <p>Your pantry is empty. Add some ingredients!</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {pantryItems.map((item) => (
-              <div key={item.id} className="border p-4 rounded bg-gray-800">
-                <h3 className="font-bold text-lg">{item.ingredient.name}</h3>
+              <div
+                key={item.id}
+                className="border p-4 rounded bg-gray-800"
+              >
+                <h3 className="font-bold text-lg">
+                  {item.ingredient.name}
+                </h3>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Trending Ingredients */}
+        <h2 className="text-2xl font-semibold mb-4">
+          Trending Ingredients
+        </h2>
+        {loadingTrending ? (
+          <p>Loading trending ingredients...</p>
+        ) : trendingIngredients.length === 0 ? (
+          <p>No trending ingredients at the moment.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {trendingIngredients.map((ing) => (
+              <div
+                key={ing.id}
+                className="border p-4 rounded bg-gray-800"
+              >
+                <h3 className="font-bold text-lg">{ing.name}</h3>
               </div>
             ))}
           </div>

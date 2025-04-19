@@ -1,8 +1,8 @@
 from django.urls import path
 from .views import (
-    IngredientListCreate, PantryItemListCreate, PantryItemRetrieveUpdateDelete,
-    RecipeListCreate, RecipeListPaginatedByDiet, RecipeRetrieveUpdateDelete, RecipeListMinimalView,
-    ReviewListCreate, RecipeFavoritesList, BrowseRecipesView, toggle_favorite
+    GroceryListView, IngredientListCreate, PantryItemListCreate, PantryItemRetrieveUpdateDelete,
+    RecipeListCreate, RecipeRetrieveUpdateDelete, RecipeListMinimalView,
+    ReviewListCreate, RecipeFavoritesList, BrowseRecipesView, SuggestRecipesView, TogglePantryItem, TrendingIngredientsView, toggle_favorite
 )
 
 urlpatterns = [
@@ -14,7 +14,10 @@ urlpatterns = [
     path('recipes/minimal/', RecipeListMinimalView.as_view(), name='recipe-list-minimal'),
     path("recipes/<int:pk>/reviews/", ReviewListCreate.as_view(), name="review-list-create"),
     path("recipes/favorites/", RecipeFavoritesList.as_view(), name="recipe-favorites"),
-    path('recipes/paginated/', RecipeListPaginatedByDiet.as_view(), name='paginated-recipes'),
     path('recipes/browse/', BrowseRecipesView.as_view(), name='browse-recipes'),
     path('recipes/<int:recipe_id>/toggle-favorite/', toggle_favorite, name='toggle-favorite'),
+    path('recipes/suggestions/', SuggestRecipesView.as_view(), name='recipe-suggestions'),
+    path('pantry/toggle/<int:ingredient_id>/', TogglePantryItem.as_view(), name='toggle-pantry-item'),
+    path('ingredients/trending/', TrendingIngredientsView.as_view(), name='trending-ingredients'),
+    path('grocery-list/',GroceryListView.as_view(),name='grocery-list'),
 ]

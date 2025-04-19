@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://97.89.112.225:8000/api";
+const API_BASE_URL = "http://localhost:8000/api";
 
 // Helper function to get the token from localStorage
 export const getAuthHeaders = () => {
@@ -118,4 +118,13 @@ export const toggleFavorite = async (recipeId) => {
   }
 
   return response.json();
+};
+export const fetchGroceryList = async (recipeIds=[]) => {
+  if (!recipeIds.length) return [];
+  const qs = recipeIds.join(",");
+  const res = await fetch(`${API}/grocery-list/?recipes=${qs}`, {
+    headers: getAuthHeaders()
+  });
+  if (!res.ok) throw new Error("Failed to fetch grocery list");
+  return await res.json();  // array of { id, name, ... }
 };

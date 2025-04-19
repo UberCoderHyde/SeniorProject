@@ -1,4 +1,3 @@
-# models.py
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
@@ -17,10 +16,15 @@ class Ingredient(models.Model):
 
 class PantryItem(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
         related_name="pantry_items"
     )
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name="pantry_items"
+    )
 
     class Meta:
         unique_together = ('user', 'ingredient')
@@ -37,32 +41,26 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.title
+
     @property
     def cleaned_ingredients(self):
         from rapidfuzz import fuzz, process
         import re
-        from .models import Ingredient
-        lines = self.recipeIngred.lower().split('\n')
-        known_ingredients = [name.lower() for name in Ingredient.objects.values_list('name', flat=True)]
-        matched_ingredients = []
-
-        for line in lines:
+        known = [n.lower() for n in Ingredient.objects.values_list('name', flat=True)]
+        matched = []
+        for line in self.recipeIngred.lower().split('\n'):
             line = re.sub(r'[^a-zA-Z\s]', '', line).strip()
             words = line.split()
-            if not words:
-                continue
-
             for i in range(len(words), 0, -1):
-                candidate = ' '.join(words[:i])
-                match = process.extractOne(candidate, known_ingredients, scorer=fuzz.partial_ratio, score_cutoff=70)
-                if match:
+                cand = ' '.join(words[:i])
+                m = process.extractOne(cand, known, scorer=fuzz.partial_ratio, score_cutoff=70)
+                if m:
                     try:
-                        matched_ingredients.append(Ingredient.objects.get(name__iexact=match[0]))
+                        matched.append(Ingredient.objects.get(name__iexact=m[0]))
                     except Ingredient.DoesNotExist:
                         pass
                     break
-
-        return matched_ingredients
+        return matched
 
     def compute_dietary_tags(self):
         tags = set()
@@ -90,7 +88,6 @@ class Recipe(models.Model):
             if not ing.is_keto_friendly:
                 is_keto = False
 
-        # Add positive tags so filtering works
         if is_vegan:
             tags.add('vegan')
         if is_vegetarian:
@@ -102,25 +99,16 @@ class Recipe(models.Model):
 
         return list(tags)
 
-
     def save(self, *args, **kwargs):
         self.dietary_tags = self.compute_dietary_tags()
         super().save(*args, **kwargs)
-
-    
 
 class Review(models.Model):
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="reviews")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     review_text = models.TextField(default="No review provided")
     rating = models.IntegerField(
-        choices = [
-            (1, "1 star"),
-            (2, "2 star"), 
-            (3, "3 star"), 
-            (4, "4 star"), 
-            (5, "5 star")
-        ], 
+        choices=[(i, f"{i} star") for i in range(1,6)],
         help_text="Rating from 1 (worst) to 5 (best)"
     )
     timestamp = models.DateTimeField(auto_now_add=True)

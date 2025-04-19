@@ -31,6 +31,13 @@ class RecipeSerializer(serializers.ModelSerializer):
             'cleaned_ingredients', 'average_rating', 'review_count'
         ]
 
+class RecipeSuggestionSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    image = serializers.CharField(allow_null=True)
+    missing_count = serializers.IntegerField()
+    missing_ingredients = serializers.ListField(child=serializers.CharField())
+
 
 class RecipeListSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()

@@ -120,6 +120,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
      "http://97.89.112.225:3000",
+     "http://localhost:3000",  # or whatever port your React app runs on]
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -128,6 +129,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:5174",
      "http://97.89.112.225:3000",
+     "http://localhost:3000",
 ]
 CSRF_COOKIE_SECURE = True   # For local development, set this to False if not using HTTPS
 CSRF_COOKIE_HTTPONLY = True

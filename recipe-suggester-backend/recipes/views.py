@@ -1,17 +1,21 @@
-# views.py
 from rest_framework import generics, permissions, status
-from .models import Ingredient, PantryItem, Recipe, Review
-from .serializers import IngredientSerializer, PantryItemSerializer, RecipeSerializer, RecipeListSerializer, ReviewSerializer
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.pagination import PageNumberPagination
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from rest_framework.decorators import api_view,permission_classes
-from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 from django.core.cache import cache
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, Q, Prefetch
 import random
 
+from .models import Ingredient, PantryItem, Recipe, Review
+from .serializers import (
+    IngredientSerializer, PantryItemSerializer, RecipeSerializer,
+    RecipeListSerializer, RecipeSuggestionSerializer, ReviewSerializer
+)
 
+# Toggle favorite recipes (existing)
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 def toggle_favorite(request, recipe_id):
@@ -27,11 +31,14 @@ def toggle_favorite(request, recipe_id):
     else:
         user.favorite_recipes.add(recipe)
         return Response({"favorited": True})
+
+# Ingredient CRUD
 class IngredientListCreate(generics.ListCreateAPIView):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+# Pantry CRUD
 @method_decorator(csrf_exempt, name='dispatch')
 class PantryItemListCreate(generics.ListCreateAPIView):
     serializer_class = PantryItemSerializer
@@ -42,9 +49,8 @@ class PantryItemListCreate(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         ingredient = serializer.validated_data.get("ingredient")
-        if PantryItem.objects.filter(user=self.request.user, ingredient=ingredient).exists():
-            return
-        serializer.save(user=self.request.user)
+        if not PantryItem.objects.filter(user=self.request.user, ingredient=ingredient).exists():
+            serializer.save(user=self.request.user)
 
 class PantryItemRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PantryItemSerializer
@@ -53,18 +59,41 @@ class PantryItemRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return PantryItem.objects.filter(user=self.request.user)
 
+# Task #47: Toggle a pantry ingredient in/out
+class TogglePantryItem(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def post(self, request, ingredient_id):
+        user = request.user
+        try:
+            pi = PantryItem.objects.get(user=user, ingredient_id=ingredient_id)
+            pi.delete()
+            return Response({"ingredient_id": ingredient_id, "in_pantry": False}, status=status.HTTP_200_OK)
+        except PantryItem.DoesNotExist:
+            PantryItem.objects.create(user=user, ingredient_id=ingredient_id)
+            return Response({"ingredient_id": ingredient_id, "in_pantry": True}, status=status.HTTP_201_CREATED)
+
+# Task #53: Trending ingredients
+class TrendingIngredientsView(generics.ListAPIView):
+    serializer_class = IngredientSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        return (
+            Ingredient.objects
+            .annotate(pantry_count=Count('pantry_items'))
+            .order_by('-pantry_count')[:10]
+        )
+
+# Recipe list & detail
 class RecipeListCreate(generics.ListCreateAPIView):
     serializer_class = RecipeSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        queryset = Recipe.objects.annotate(
+        return Recipe.objects.annotate(
             average_rating=Avg("reviews__rating"),
             review_count=Count("reviews")
         )
-        if self.request.query_params.get('random') == 'true':
-            queryset = queryset.order_by('?')[:20]
-        return queryset
 
 class RecipeRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     queryset = Recipe.objects.annotate(
@@ -74,66 +103,63 @@ class RecipeRetrieveUpdateDelete(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = RecipeSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+# Minimal list for carousels, with search, diet, trending, favorite, random
 class RecipeListMinimalView(generics.ListAPIView):
     serializer_class = RecipeListSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        queryset = Recipe.objects.annotate(
+        qs = Recipe.objects.annotate(
             average_rating=Avg("reviews__rating"),
             review_count=Count("reviews")
         )
+        params = self.request.query_params
 
-        search_query = self.request.query_params.get('search')
-        if search_query:
-            queryset = queryset.filter(
-                Q(title__icontains=search_query) |
-                Q(recipeIngred__icontains=search_query)
-            ).distinct()
-        if self.request.query_params.get('diet'):
-            diet = self.request.query_params['diet']
-            return queryset.filter(dietary_tags__contains=[diet]).distinct()[:20]
-        if self.request.query_params.get('trending') == 'true':
-                    cached = cache.get("trending_recipes")
-                    if cached:
-                        return cached
-                    trending = Recipe.objects.annotate(num_reviews=Count('reviews')).order_by('-num_reviews')[:20]
-                    cache.set("trending_recipes", trending, 300)
-                    return trending
-        if self.request.query_params.get('favorite') == 'true':
-            if self.request.user.is_authenticated:
-                return self.request.user.favorite_recipes.annotate(
-                    average_rating=Avg("reviews__rating"),
-                    review_count=Count("reviews")
-                ).distinct()[:20]
-            return Recipe.objects.none()
+        if params.get('search'):
+            q = params['search']
+            qs = qs.filter(Q(title__icontains=q) | Q(recipeIngred__icontains=q)).distinct()
 
-        if self.request.query_params.get('random') == 'true':
-            cached = cache.get("random_recipes")
-            if cached:
+        if params.get('diet'):
+            qs = qs.filter(dietary_tags__contains=[params['diet']]).distinct()[:20]
+
+        elif params.get('trending') == 'true':
+            cached = cache.get("trending_recipes")
+            if cached is not None:
                 return cached
-            recipe_ids = list(queryset.values_list('id', flat=True))
-            if len(recipe_ids) > 20:
-                sample_ids = random.sample(recipe_ids, 20)
-                result = queryset.filter(id__in=sample_ids)
-                cache.set("random_recipes", result, 300)
-                return result
-            return queryset
+            top = qs.annotate(num_reviews=Count('reviews')).order_by('-num_reviews')[:20]
+            cache.set("trending_recipes", top, 300)
+            return top
 
-        return queryset.distinct()[:20]
+        elif params.get('favorite') == 'true' and self.request.user.is_authenticated:
+            return self.request.user.favorite_recipes.annotate(
+                average_rating=Avg("reviews__rating"),
+                review_count=Count("reviews")
+            ).distinct()[:20]
 
+        elif params.get('random') == 'true':
+            cached = cache.get("random_recipes")
+            if cached is not None:
+                return cached
+            ids = list(qs.values_list('id', flat=True))
+            sample = random.sample(ids, min(len(ids), 20))
+            rand_qs = qs.filter(id__in=sample)
+            cache.set("random_recipes", rand_qs, 300)
+            return rand_qs
+
+        return qs.distinct()[:20]
+
+# Reviews
 class ReviewListCreate(generics.ListCreateAPIView):
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        recipe_id = self.kwargs["pk"]
-        return Review.objects.filter(recipe_id=recipe_id)
+        return Review.objects.filter(recipe_id=self.kwargs["pk"])
 
     def perform_create(self, serializer):
-        recipe_id = self.kwargs["pk"]
-        serializer.save(user=self.request.user, recipe_id=recipe_id)
+        serializer.save(user=self.request.user, recipe_id=self.kwargs["pk"])
 
+# Favorite recipes list
 class RecipeFavoritesList(generics.ListAPIView):
     serializer_class = RecipeListSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -144,35 +170,13 @@ class RecipeFavoritesList(generics.ListAPIView):
             review_count=Count("reviews")
         )
 
+# Pagination helper
 class LimitedPagination(PageNumberPagination):
     page_size = 50
     page_size_query_param = 'page_size'
     max_page_size = 50
 
-class RecipeListPaginatedByDiet(generics.ListAPIView):
-    serializer_class = RecipeListSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    pagination_class = LimitedPagination
-
-    def get_queryset(self):
-        queryset = Recipe.objects.annotate(
-            average_rating=Avg("reviews__rating"),
-            review_count=Count("reviews")
-        ).order_by('id')
-        if self.request.query_params.get('trending') == 'true':
-            queryset = queryset.annotate(num_reviews=Count('reviews')).order_by('-num_reviews')
-        diet = self.request.query_params.get('diet')
-        if diet:
-            queryset = queryset.filter(dietary_tags__contains=[diet])
-        if self.request.query_params.get('favorite') == 'true' and self.request.user.is_authenticated:
-            queryset = self.request.user.favorite_recipes.annotate(
-                average_rating=Avg("reviews__rating"),
-                review_count=Count("reviews")
-            ).order_by('id')
-        if self.request.query_params.get('random') == 'true':
-            queryset = queryset.order_by('?')
-        return queryset.distinct()
-
+# Browse view
 class BrowseRecipesView(generics.ListAPIView):
     serializer_class = RecipeListSerializer
     permission_classes = [permissions.AllowAny]
@@ -183,3 +187,81 @@ class BrowseRecipesView(generics.ListAPIView):
             average_rating=Avg("reviews__rating"),
             review_count=Count("reviews")
         ).order_by('id')
+
+# Task #54 & #55: Suggestions
+class SuggestRecipesView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        have_ids = set(
+            PantryItem.objects.filter(user=request.user)
+            .values_list('ingredient_id', flat=True)
+        )
+        suggestions = []
+        qs = Recipe.objects.prefetch_related(
+            Prefetch('ingredients', queryset=Ingredient.objects.only('id','name'))
+        )
+        for recipe in qs:
+            req = {ing.id for ing in recipe.ingredients.all()}
+            missing = req - have_ids
+            suggestions.append({
+                'id': recipe.id,
+                'title': recipe.title,
+                'image': recipe.image.url if recipe.image else None,
+                'missing_count': len(missing),
+                'missing_ingredients': list(
+                    Ingredient.objects.filter(id__in=missing)
+                              .values_list('name', flat=True)
+                )
+            })
+        suggestions.sort(key=lambda x: x['missing_count'])
+        if request.query_params.get('can_make') == 'true':
+            suggestions = [s for s in suggestions if s['missing_count'] == 0]
+        if (t := request.query_params.get('threshold')) is not None:
+            try:
+                thr = int(t)
+                suggestions = [s for s in suggestions if s['missing_count'] <= thr]
+            except ValueError:
+                pass
+        return Response(RecipeSuggestionSerializer(suggestions, many=True).data)
+
+class GroceryListView(APIView):
+    """
+    GET /api/grocery-list/?recipes=1,2,3
+    Returns the deduplicated list of ingredients the user is missing
+    across the given recipe IDs.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        recipe_ids = request.query_params.get('recipes')
+        if not recipe_ids:
+            return Response(
+                {"detail": "Please provide recipe IDs, e.g. ?recipes=1,2,3"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            ids = [int(x) for x in recipe_ids.split(',') if x.strip()]
+        except ValueError:
+            return Response(
+                {"detail": "Invalid recipe IDs format."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # What the user already has:
+        have = set(
+            PantryItem.objects
+            .filter(user=request.user)
+            .values_list('ingredient_id', flat=True)
+        )
+
+        missing_ids = set()
+        # For each recipe, collect missing ingredient IDs
+        for recipe in Recipe.objects.prefetch_related('ingredients').filter(id__in=ids):
+            req_ids = set(recipe.ingredients.values_list('id', flat=True))
+            missing_ids |= (req_ids - have)
+
+        # Serialize the missing ingredients
+        missing_qs = Ingredient.objects.filter(id__in=missing_ids).order_by('name')
+        serializer = IngredientSerializer(missing_qs, many=True)
+        return Response(serializer.data)

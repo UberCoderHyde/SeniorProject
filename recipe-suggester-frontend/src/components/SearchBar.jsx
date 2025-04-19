@@ -13,7 +13,7 @@ const SearchBar = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://97.89.112.225:8000/api/recipes/minimal/", {
+      const response = await axios.get("http://localhost:8000/api/recipes/minimal/", {
         params: { search: query },
       });
 
