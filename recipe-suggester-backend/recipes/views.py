@@ -193,38 +193,49 @@ class SuggestRecipesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        # 1) what ingredients the user already has
         have_ids = set(
-            PantryItem.objects.filter(user=request.user)
+            PantryItem.objects
+            .filter(user=request.user)
             .values_list('ingredient_id', flat=True)
         )
+
         suggestions = []
-        qs = Recipe.objects.prefetch_related(
-            Prefetch('ingredients', queryset=Ingredient.objects.only('id','name'))
-        )
-        for recipe in qs:
-            req = {ing.id for ing in recipe.ingredients.all()}
-            missing = req - have_ids
+        # 2) loop every recipe, use its cleaned_ingredients list
+        for recipe in Recipe.objects.all():
+            ingredients = recipe.cleaned_ingredients  # list of Ingredient instances
+            req_ids = {ing.id for ing in ingredients}
+            missing_ids = req_ids - have_ids
+
             suggestions.append({
                 'id': recipe.id,
                 'title': recipe.title,
                 'image': recipe.image.url if recipe.image else None,
-                'missing_count': len(missing),
-                'missing_ingredients': list(
-                    Ingredient.objects.filter(id__in=missing)
-                              .values_list('name', flat=True)
-                )
+                'missing_count': len(missing_ids),
+                'missing_ingredients': [
+                    ing.name for ing in ingredients
+                    if ing.id in missing_ids
+                ]
             })
-        suggestions.sort(key=lambda x: x['missing_count'])
+
+        # 3) sort by fewest missing ingredients first
+        suggestions.sort(key=lambda s: s['missing_count'])
+
+        # 4) optional filters
         if request.query_params.get('can_make') == 'true':
             suggestions = [s for s in suggestions if s['missing_count'] == 0]
+
         if (t := request.query_params.get('threshold')) is not None:
             try:
                 thr = int(t)
                 suggestions = [s for s in suggestions if s['missing_count'] <= thr]
             except ValueError:
+                # ignore non-integer thresholds
                 pass
-        return Response(RecipeSuggestionSerializer(suggestions, many=True).data)
 
+        # 5) serialize & return
+        return Response(RecipeSuggestionSerializer(suggestions, many=True).data)
+    
 class GroceryListView(APIView):
     """
     GET /api/grocery-list/?recipes=1,2,3
