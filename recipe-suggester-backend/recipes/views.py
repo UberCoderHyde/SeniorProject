@@ -12,7 +12,8 @@ import random
 from .models import Ingredient, PantryItem, Recipe, Review
 from .serializers import (
     IngredientSerializer, PantryItemSerializer, RecipeSerializer,
-    RecipeListSerializer, RecipeSuggestionSerializer, ReviewSerializer
+    RecipeListSerializer, RecipeSuggestionSerializer, ReviewSerializer,
+    RecipeCreateSerializer
 )
 
 # Toggle favorite recipes (existing)
@@ -276,3 +277,16 @@ class GroceryListView(APIView):
         missing_qs = Ingredient.objects.filter(id__in=missing_ids).order_by('name')
         serializer = IngredientSerializer(missing_qs, many=True)
         return Response(serializer.data)
+    
+class CreateRecipeView(APIView):
+    def post(self, request):
+        #extract incoming request data.
+        serializer = RecipeCreateSerializer(data=request.data)
+        #validate the input data
+        if serializer.is_valid():
+            #Save the recipe.
+            serializer.save()
+            #return success reponse
+            return Response({'message': 'Recipe created successfully', 'data': serializer.data}, status=status.HTTP_201_CREATED)
+        #return error response
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

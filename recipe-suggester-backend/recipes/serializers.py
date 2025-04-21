@@ -68,3 +68,10 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ["id", "user", "recipe", "rating", "review_text", "timestamp"]
+
+
+class RecipeCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        # User input fields
+        fields = ['id', 'title', 'instructions', 'recipeIngred', 'image']  
