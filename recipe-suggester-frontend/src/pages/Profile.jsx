@@ -77,6 +77,12 @@ const Profile = () => {
             </h1>
             <p className="text-gray-300">{user.email}</p>
           </div>
+          <input type="file" id="file" style="display: none;"/>
+
+          <button onclick="document.getElementById('file').click()" className="text-gray-300" style="padding: 8px 16px; background-color:rgb(206, 88, 58); color: white; border: none; border-radius: 4px;">
+            Upload File
+          </button>
+          <p id="file" style="color:white; margin-top: 10px;">test</p>
         </div>
 
         {/* My Pantry */}
