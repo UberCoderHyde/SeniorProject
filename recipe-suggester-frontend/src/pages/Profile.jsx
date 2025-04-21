@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import useAuth from "../hooks/useAuth";
 import {
   fetchPantryItems,
@@ -13,6 +13,20 @@ const Profile = () => {
   const [loadingTrending, setLoadingTrending] = useState(true);
   const [error, setError] = useState("");
 
+  const fileInputRef = useRef();
+
+  const handleClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log("File:", file.name);
+      // Update Profile Picture for User
+      // user.profile_picture = file.name;
+    }
+  };
   // Load pantry items
   useEffect(() => {
     const loadPantry = async () => {
@@ -54,6 +68,8 @@ const Profile = () => {
     );
   }
 
+
+
   return (
     <div className="min-h-screen bg-black text-gray-300 p-6">
       <div className="max-w-4xl mx-auto">
@@ -77,12 +93,26 @@ const Profile = () => {
             </h1>
             <p className="text-gray-300">{user.email}</p>
           </div>
-          <input type="file" id="file" style="display: none;"/>
-
-          <button onclick="document.getElementById('file').click()" style="padding: 8px 16px; background-color:rgb(206, 88, 58); color: white; border: none; border-radius: 4px;">
-            Upload File
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <button
+            onClick={handleClick}
+            className="text-2x1 font-bold"
+            style={{
+              marginLeft: '30px',
+              padding: '5px 9px',
+              backgroundColor: 'rgb(255 99 71 / var(--tw-bg-opacity, 1))',
+              border: 'none',
+              borderRadius: '3px',
+            }}
+          >
+            Change Profile Picture
           </button>
-          <p id="file" style="color:white; margin-top: 10px;">test</p>
+          <p className="text-gray-300"></p>
         </div>
 
         {/* My Pantry */}
