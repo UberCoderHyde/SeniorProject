@@ -64,5 +64,37 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS(f"Sent email to {email}"))
 
+    def send_emails(self):
+        users = get_user_model().objects.filter(is_subscribed=True)
+        if not users:
+            self.stdout.write(self.style.WARNING("No subscribed users found."))
+            return
+
+        recipe = random.choice(Recipe.objects.all())
+
+        subject = f"Weekly Recipe - {recipe.title}"
+        for user in users:
+            unsubscribe_url = (
+                f"{settings.SITE_URL}/api/users/unsubscribe/?user_id={user.id}"
+            )
+
+            message = render_to_string(
+                "recipes/newsletter.html",
+                {
+                    "recipe": recipe,
+                    "unsubscribe_url": unsubscribe_url,
+                },
+            )
+
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+                html_message=message,
+            )
+            self.stdout.write(self.style.SUCCESS(f"Sent email to {user.email}"))
+    
     def handle(self, *args, **options):
-        self.test_send_emails()
+        self.send_emails()
