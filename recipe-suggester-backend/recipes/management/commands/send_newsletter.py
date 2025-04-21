@@ -10,7 +10,7 @@ from recipes.models import Recipe
 class Command(BaseCommand):
     help = "Send a weekly recipe newsletter to subscribed users"
 
-    def test(self):
+    def test_send_emails(self):
         recipe = Recipe.objects.create(
             title="Creamy Garlic Mushrooooooom Pasta",
             instructions=(
@@ -65,4 +65,4 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Sent email to {email}"))
 
     def handle(self, *args, **options):
-        self.test()
+        self.test_send_emails()
