@@ -43,7 +43,7 @@ class Command(BaseCommand):
 
         for email in email_addresses:
             unsubscribe_url = (
-                f"{settings.SITE_URL}/api/users/unsubscribe/?user_id={email}/"
+                f"{settings.SITE_URL}/api/users/unsubscribe?user_id={email}/"
             )
             message = render_to_string(
                 "recipes/newsletter.html",
@@ -75,7 +75,7 @@ class Command(BaseCommand):
         subject = f"Weekly Recipe - {recipe.title}"
         for user in users:
             unsubscribe_url = (
-                f"{settings.SITE_URL}/api/users/unsubscribe/?user_id={user.id}"
+                f"{settings.SITE_URL}/api/users/unsubscribe?user_id={user.id}"
             )
 
             message = render_to_string(
