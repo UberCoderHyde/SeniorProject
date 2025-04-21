@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,6 +6,8 @@ from rest_framework.permissions import AllowAny,IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import render
 
 class LoginUserView(APIView):
     permission_classes = [AllowAny]
@@ -49,3 +51,18 @@ def user_profile(request):
         "username": user.username,
     }
     return Response({"user": profile_data})
+
+def unsubscribe(request:HttpRequest):
+    user_id = request.GET.get("user_id")
+    if not user_id:
+        return render("users/unsubscribe_fail.html")
+    
+    User = get_user_model()
+    try:
+        user = User.objects.get(id=user_id)
+        user.is_subscribed = False
+        user.save()
+        return render("users/unsubscribe_success.html")
+    except:
+        return render("users/unsubscribe_fail.html")
+    
