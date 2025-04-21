@@ -2,44 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ recipe.title }} - Weekly Recipe</title>
 </head>
-<body>
-    <h1>Weekly Recipe: {{ recipe.title }}</h1>
-    <p>Here is a weekly recipe for you.</p>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; color: #333;">
+    <h1>{{ recipe.title }}</h1>
 
     {% if recipe.image %}
-        <img src="{{ recipe.image.url }}" alt="{{ recipe.title }}" style="width: 100%; height: auto;"/>
-    {% else %}
-        <p>
-            <strong>No image available</strong>
-        </p>
+    <p><img src="{{ recipe.image.url }}" alt="Image of {{ recipe.title }}" style="max-width: 100%; height: auto;"></p>
     {% endif %}
 
-    <h2>Ingredients:</h2>
+    <h2>Ingredients</h2>
     <ul>
         {% for ingredient in recipe.cleaned_ingredients %}
-            <li>{{ ingredient.name }}</li>
-        {% empty %}
-            <li>No ingredients found.</li>
+        <li>{{ ingredient.name }}</li>
         {% endfor %}
     </ul>
 
-    <h2>Instructions:</h2>
+    <h2>Instructions</h2>
     <p>{{ recipe.instructions }}</p>
 
-    <h2>Dietary Tags:</h2>
-    <ul>
-        {% for tag in recipe.dietary_tags %}
-            <li>{{ tag|capfirst }}</li>
-        {% empty %}
-            <li>No dietary tags.</li>
-        {% endfor %}
-    </ul>
-
-    <footer>
-        <p>If you no longer wish to receive this newsletter, you can <a href="{{ unsubscribe_url }}">unsubscribe here</a>.</p>
-    </footer>
+    <hr style="margin-top: 40px;">
+    <p style="color: #555;"><a href="{{ unsubscribe_url }}" target="_blank">Unsubscribe</a> from the newsletter.</p>
 </body>
 </html>
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+    unsubscribe here</a>.</p>
+    
+</bo
+</ht
