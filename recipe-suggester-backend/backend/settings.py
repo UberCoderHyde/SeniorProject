@@ -146,3 +146,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "recipe.suggester.bot@gmail.com"
 EMAIL_HOST_PASSWORD = "digj vjuq wxsx aweb"
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+# Site url
+# TODO
+SITE_URL = "recipesuggester.com"
