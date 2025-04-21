@@ -2,12 +2,16 @@ from django.contrib.auth import authenticate, get_user_model
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework import permissions
+from rest_framework import generics
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import LoginSerializer, UserSerializer, RegisterSerializer
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 class LoginUserView(APIView):
     permission_classes = [AllowAny]
@@ -67,3 +71,10 @@ def unsubscribe(request:HttpRequest):
     except:
         return render("users/unsubscribe_fail.html")
     
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    def get_object(self):
+        return self.request.user

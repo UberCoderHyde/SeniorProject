@@ -1,33 +1,58 @@
+// src/components/Profile.jsx
 import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import useAuth from "../hooks/useAuth";
 import {
   fetchPantryItems,
   fetchTrendingIngredients,
 } from "../services/ingredientService";
 
+// configure base URL if needed, and allow sending cookies
+axios.defaults.baseURL = "http://localhost:8000/api";
+axios.defaults.withCredentials = true;
+
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [pantryItems, setPantryItems] = useState([]);
   const [trendingIngredients, setTrendingIngredients] = useState([]);
   const [loadingPantry, setLoadingPantry] = useState(true);
   const [loadingTrending, setLoadingTrending] = useState(true);
   const [error, setError] = useState("");
-
+  const [uploadError, setUploadError] = useState("");
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef();
 
-  const handleClick = () => {
-    fileInputRef.current.click();
-  };
+  // open file picker
+  const handleClick = () => fileInputRef.current.click();
 
-  const handleFileChange = (e) => {
+  // handle profile picture upload
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      console.log("File:", file.name);
-      // Update Profile Picture for User
-      // user.profile_picture = file.name;
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    const formData = new FormData();
+    formData.append("profile_picture", file);
+
+    try {
+      const { data } = await axios.patch(
+        "/user/profile/",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      // if your API returns { user: {...} }, do setUser(data.user)
+      setUser(data);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      setUploadError("Failed to upload profile picture.");
+    } finally {
+      setUploading(false);
     }
   };
-  // Load pantry items
+
+  // load pantry items
   useEffect(() => {
     const loadPantry = async () => {
       try {
@@ -44,7 +69,7 @@ const Profile = () => {
     else setLoadingPantry(false);
   }, [user]);
 
-  // Load trending ingredients (#53)
+  // load trending ingredients
   useEffect(() => {
     const loadTrending = async () => {
       try {
@@ -68,16 +93,15 @@ const Profile = () => {
     );
   }
 
-
-
   return (
     <div className="min-h-screen bg-black text-gray-300 p-6">
       <div className="max-w-4xl mx-auto">
+        {/* Profile header */}
         <div className="flex items-center space-x-4 mb-6">
           {user.profile_picture ? (
             <img
               src={user.profile_picture}
-              alt={user.first_name}
+              alt={`${user.first_name}'s avatar`}
               className="w-16 h-16 rounded-full object-cover"
             />
           ) : (
@@ -87,33 +111,31 @@ const Profile = () => {
               </span>
             </div>
           )}
+
           <div>
             <h1 className="text-3xl font-bold text-primary mb-2">
               {user.first_name} {user.last_name}
             </h1>
             <p className="text-gray-300">{user.email}</p>
           </div>
+
           <input
             type="file"
             ref={fileInputRef}
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
+            accept="image/*"
             onChange={handleFileChange}
           />
           <button
             onClick={handleClick}
-            className="text-2x1 font-bold"
-            style={{
-              marginLeft: '30px',
-              padding: '5px 9px',
-              backgroundColor: 'rgb(255 99 71 / var(--tw-bg-opacity, 1))',
-              border: 'none',
-              borderRadius: '3px',
-            }}
+            className="ml-6 px-3 py-1 bg-red-500 rounded text-white"
+            disabled={uploading}
           >
-            Change Profile Picture
+            {uploading ? "Uploading…" : "Change Profile Picture"}
           </button>
-          <p className="text-gray-300"></p>
         </div>
+
+        {uploadError && <p className="text-red-500 mb-4">{uploadError}</p>}
 
         {/* My Pantry */}
         <h2 className="text-2xl font-semibold mb-4">My Pantry</h2>

@@ -21,6 +21,9 @@ class UserSerializer(serializers.ModelSerializer):
             "profile_picture", 
             "bio"
         )
+        extra_kwargs = {
+            'profile_picture': {'required': False, 'allow_null': True},
+        }
 
 # Serializer for registration.
 class RegisterSerializer(serializers.ModelSerializer):
