@@ -52,6 +52,7 @@ def user_profile(request):
     }
     return Response({"user": profile_data})
 
+# /api/users/unsubscribe?user_id=12345
 def unsubscribe(request:HttpRequest):
     user_id = request.GET.get("user_id")
     if not user_id:
