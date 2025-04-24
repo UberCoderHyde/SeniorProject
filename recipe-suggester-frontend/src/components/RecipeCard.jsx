@@ -29,13 +29,13 @@ const RecipeCard = ({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow relative bg-white">
+    <div className="border rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow relative">
       {image && (
         <img src={image} alt={title} className="w-full h-48 object-cover" />
       )}
       <div className="p-4">
         <h2 className="text-xl font-bold text-primary mb-2">{title}</h2>
-        <p className="text-gray-600 text-sm mb-2">
+        <p className="text-gray-300 text-sm mb-2">
           {cleaned_ingredients.map((ing) => ing.name).join(", ")}
         </p>
         <div className="flex items-center justify-between mb-2">

@@ -1,16 +1,12 @@
-import React, { useRef } from "react";
+// src/components/RecipeCarousel.jsx
+
+import React from "react";
+import Slider from "react-slick";
 import RecipeCard from "./RecipeCard";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const RecipeCarousel = ({ recipes, onToggleFavorite, favorites = new Set() }) => {
-  const scrollRef = useRef();
-
-  const scroll = (dir) => {
-    if (scrollRef.current) {
-      const width = scrollRef.current.offsetWidth;
-      scrollRef.current.scrollBy({ left: dir === "left" ? -width : width, behavior: "smooth" });
-    }
-  };
-
   const isFavoriteFn = (id) => {
     if (favorites instanceof Set) return favorites.has(id);
     if (Array.isArray(favorites)) return favorites.includes(id);
@@ -25,27 +21,29 @@ const RecipeCarousel = ({ recipes, onToggleFavorite, favorites = new Set() }) =>
     );
   }
 
-  return (
-    <div className="relative">
-      <button
-        onClick={() => scroll("left")}
-        className="absolute top-1/2 left-0 z-10 -translate-y-1/2 bg-black bg-opacity-50 text-white px-3 py-2 rounded-l hover:bg-opacity-80"
-      >
-        ◀
-      </button>
-      <button
-        onClick={() => scroll("right")}
-        className="absolute top-1/2 right-0 z-10 -translate-y-1/2 bg-black bg-opacity-50 text-white px-3 py-2 rounded-r hover:bg-opacity-80"
-      >
-        ▶
-      </button>
+  const settings = {
+    dots: true,
+    infinite: false,
+    speed: 500,
+    slidesToShow: 5,
+    slidesToScroll: 3,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: { slidesToShow: 2, slidesToScroll: 2, infinite: false, dots: true }
+      },
+      {
+        breakpoint: 640,
+        settings: { slidesToShow: 1, slidesToScroll: 1, infinite: false, dots: true }
+      }
+    ]
+  };
 
-      <div
-        ref={scrollRef}
-        className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x pb-4 px-8"
-      >
+  return (
+    <div className="slider-container py-4">
+      <Slider {...settings}>
         {recipes.map((recipe) => (
-          <div key={recipe.id} className="snap-start shrink-0 w-[300px]">
+          <div key={recipe.id} className="px-2">
             <RecipeCard
               recipe={recipe}
               onToggleFavorite={onToggleFavorite}
@@ -53,7 +51,7 @@ const RecipeCarousel = ({ recipes, onToggleFavorite, favorites = new Set() }) =>
             />
           </div>
         ))}
-      </div>
+      </Slider>
     </div>
   );
 };
