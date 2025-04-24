@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.cache import cache
 from django.db.models import Avg, Count, Q
 import random
