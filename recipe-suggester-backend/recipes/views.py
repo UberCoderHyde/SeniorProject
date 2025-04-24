@@ -245,12 +245,25 @@ class GroceryListView(APIView):
 
 # Recipe Creation
 class CreateRecipeView(APIView):
-    def post(self, request):
-        serializer = RecipeCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'message': 'Recipe created successfully', 'data': serializer.data}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    """
+    POST /api/recipes/create/
+    Allows authenticated users to create a new Recipe, including an optional image.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes     = [MultiPartParser, FormParser]
+
+    def post(self, request, format=None):
+        serializer = RecipeCreateSerializer(data=request.data, context={'request': request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        recipe = serializer.save()
+        # Re-serialize the saved instance so you get all read-only fields, IDs, etc.
+        out = RecipeCreateSerializer(recipe)
+        return Response(
+            {'message': 'Recipe created successfully', 'data': out.data},
+            status=status.HTTP_201_CREATED
+        )
 
 # Review list/create
 class ReviewListCreate(generics.ListCreateAPIView):

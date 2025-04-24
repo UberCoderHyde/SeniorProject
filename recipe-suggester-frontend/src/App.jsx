@@ -15,6 +15,7 @@ import Ingredients from "./pages/Ingredients";
 import MyPantry from "./pages/MyPantry";
 import AddPantryItem from "./pages/AddPantryItem";
 import PaginatedRecipes from "./pages/PaginationRecipes";
+import CreateRecipe from "./pages/CreateRecipe";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
             <Route path="/pantry" element={<MyPantry />} />
             <Route path="/ingredients" element={<Ingredients />} />
             <Route path="/add-ingredient" element={<AddPantryItem />} />
+            <Route path="/recipes/create" element={<CreateRecipe />} />
             </Routes>
             </main>
         <Footer />
