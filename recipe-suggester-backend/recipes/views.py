@@ -268,9 +268,9 @@ class GroceryListView(APIView):
         )
 
         missing_ids = set()
-        # For each recipe, collect missing ingredient IDs
-        for recipe in Recipe.objects.prefetch_related('ingredients').filter(id__in=ids):
-            req_ids = set(recipe.ingredients.values_list('id', flat=True))
+        # For each recipe, collect missing ingredient IDs via cleaned_ingredients
+        for recipe in Recipe.objects.filter(id__in=ids):
+            req_ids = {ing.id for ing in recipe.cleaned_ingredients}
             missing_ids |= (req_ids - have)
 
         # Serialize the missing ingredients

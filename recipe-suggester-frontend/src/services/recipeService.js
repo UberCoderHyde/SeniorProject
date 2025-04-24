@@ -122,7 +122,7 @@ export const toggleFavorite = async (recipeId) => {
 export const fetchGroceryList = async (recipeIds=[]) => {
   if (!recipeIds.length) return [];
   const qs = recipeIds.join(",");
-  const res = await fetch(`${API}/grocery-list/?recipes=${qs}`, {
+  const res = await fetch(`${API_BASE_URL}/grocery-list/?recipes=${qs}`, {
     headers: getAuthHeaders()
   });
   if (!res.ok) throw new Error("Failed to fetch grocery list");

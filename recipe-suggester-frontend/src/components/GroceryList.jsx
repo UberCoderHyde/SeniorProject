@@ -35,7 +35,7 @@ const GroceryList = ({ recipeIds }) => {
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 rounded shadow">
       <h2 className="text-2xl font-bold mb-2">Grocery List</h2>
       {list.length === 0 ? (
         <p>You have all ingredients on hand!</p>
