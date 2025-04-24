@@ -3,10 +3,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import useAuth from "../hooks/useAuth";
+import {
+  fetchPantryItems,
+  fetchTrendingIngredients,
+} from "../services/ingredientService";
 
 // — Axios global configuration —
 axios.defaults.baseURL        = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
-axios.defaults.withCredentials = false;  // we're using Token auth, not cookies
+axios.defaults.withCredentials = false;  // token auth
 
 const Profile = () => {
   const { user, token, setUser } = useAuth();
@@ -19,19 +23,30 @@ const Profile = () => {
   const [uploading, setUploading]                 = useState(false);
   const fileInputRef                              = useRef();
 
-  // Automatically attach the token to all axios requests
+  // 1) attach token to all requests
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common["Authorization"] = `Token ${token}`;
-    } else {
-      delete axios.defaults.headers.common["Authorization"];
-    }
+    if (token) axios.defaults.headers.common["Authorization"] = `Token ${token}`;
+    else delete axios.defaults.headers.common["Authorization"];
   }, [token]);
 
-  // Open the hidden file input
+  // 2) on mount (or token change) fetch the fresh profile
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const { data } = await axios.get("/users/profile/");
+        // if your view returns { user: {...} }, do setUser(data.user)
+        setUser(data);
+      } catch (err) {
+        console.error("Failed to load profile:", err);
+      }
+    };
+    if (token) loadProfile();
+  }, [token, setUser]);
+
+  // open file picker
   const handleClick = () => fileInputRef.current.click();
 
-  // Handle profile-picture upload
+  // upload new profile picture
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -43,13 +58,11 @@ const Profile = () => {
     formData.append("profile_picture", file);
 
     try {
-      // PATCH to /api/users/profile/
       const { data } = await axios.patch(
         "/users/profile/",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      // Update context with the new user data
       setUser(data);
     } catch (err) {
       console.error("Upload failed:", err);
@@ -59,11 +72,11 @@ const Profile = () => {
     }
   };
 
-  // Fetch pantry items
+  // load pantry items
   useEffect(() => {
     const loadPantry = async () => {
       try {
-        const resp = await axios.get("/pantry");
+        const resp = await axios.get("/pantry/");
         setPantryItems(resp.data);
       } catch (err) {
         console.error("Error fetching pantry items:", err);
@@ -76,7 +89,7 @@ const Profile = () => {
     else setLoadingPantry(false);
   }, [user]);
 
-  // Fetch trending ingredients
+  // load trending ingredients
   useEffect(() => {
     const loadTrending = async () => {
       try {
