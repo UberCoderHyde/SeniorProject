@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Ingredient, PantryItem, Recipe, Review
+from .models import Ingredient, PantryItem, Recipe, Review, Note
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
@@ -75,3 +75,13 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         model = Recipe
         # User input fields
         fields = ['id', 'title', 'instructions', 'recipeIngred', 'image']  
+
+class NoteSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source="user.email")
+    recipe = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Note
+        fields = ['id','user','recipe','content','created_at','updated_at']
+
+

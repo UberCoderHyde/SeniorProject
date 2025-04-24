@@ -10,11 +10,11 @@ from django.core.cache import cache
 from django.db.models import Avg, Count, Q
 import random
 
-from .models import Ingredient, PantryItem, Recipe, Review
+from .models import Ingredient, PantryItem, Recipe, Review, Note
 from .serializers import (
     IngredientSerializer, PantryItemSerializer, RecipeSerializer,
     RecipeListSerializer, RecipeSuggestionSerializer, ReviewSerializer,
-    RecipeCreateSerializer
+    RecipeCreateSerializer, NoteSerializer
 )
 
 # Toggle favorite recipes
@@ -299,3 +299,44 @@ class BrowseRecipesView(generics.ListAPIView):
             average_rating=Avg("reviews__rating"),
             review_count=Count("reviews")
         ).order_by('id')
+
+class NoteDetailCRUD(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self,request,pk):
+        try:
+            note = Note.objects.get(user=request.user,recipe_id=pk)
+            serializer = NoteSerializer(note)
+            return Response(serializer.data)
+        except Note.DoesNotExist:
+            return Response({"detail": "Note Not Found."}, status=status.HTTP_404_NOT_FOUND)
+        
+    def post(self,request,pk):
+        try:
+            Note.objects.get(user=request.user,recipe_id=pk)
+            return Response({"detail":"Note already exists."},status=status.HTTP_400_BAD_REQUEST)
+        except Note.DoesNotExist:
+            serializer = NoteSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save(user=request.user, recipe_id=pk)
+                return Response(serializer.data,status=status.HTTP_201_CREATED)
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        
+    def put(self,request,pk):
+        try:
+            note = Note.objects.get(user=request.user,recipe_id=pk)
+            serializer = NoteSerializer(note,data=request.data,partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        except Note.DoesNotExist:
+            return Response({"detail": "Note not found."},status=status.HTTP_404_NOT_FOUND)
+        
+    def delete(self,request,pk):
+        try:
+            note=Note.objects.get(user=request.user,recipe_id=pk)
+            note.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Note.DoesNotExist:
+            return Response({"detail": "Note not found."},status=status.HTTP_404_NOT_FOUND)

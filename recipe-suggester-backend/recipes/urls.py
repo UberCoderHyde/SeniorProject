@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     CreateRecipeView, GroceryListView, IngredientListCreate, PantryItemListCreate, PantryItemRetrieveUpdateDelete,
     RecipeListCreate, RecipeRetrieveUpdateDelete, RecipeListMinimalView,
-    ReviewListCreate, RecipeFavoritesList, BrowseRecipesView, TogglePantryItem, TrendingIngredientsView, toggle_favorite
+    ReviewListCreate, RecipeFavoritesList, BrowseRecipesView, TogglePantryItem, TrendingIngredientsView, toggle_favorite, NoteDetailCRUD
 )
 
 urlpatterns = [
@@ -20,5 +20,6 @@ urlpatterns = [
     path('ingredients/trending/', TrendingIngredientsView.as_view(), name='trending-ingredients'),
     path('grocery-list/',GroceryListView.as_view(),name='grocery-list'),
     path("recipes/create/", CreateRecipeView.as_view(), name="recipe-create"),
-
+    path("recipes/<int:pk>/note/", NoteDetailCRUD.as_view(),name="note_detail"),
+    
 ]

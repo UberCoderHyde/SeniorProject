@@ -105,3 +105,23 @@ class Review(models.Model):
     review_text = models.TextField(default="No review provided")
     rating = models.IntegerField(choices=[(i, f"{i} star") for i in range(1, 6)])
     timestamp = models.DateTimeField(auto_now_add=True)
+
+class Note(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notes"
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="notes"
+    )
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user','recipe')
+    def __str__(self):
+        return f"Note by {self.user.username} on {self.recipe.title}"
