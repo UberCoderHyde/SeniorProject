@@ -49,7 +49,16 @@ const RecipeDetail = () => {
       setError("You must be logged in to submit a review.");
     }
   };
-
+  const handleNoteSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const created = await createNote(id, newNoteText);
+      setNotes((prev) => [...prev, created]);
+      setNewNoteText("");
+    } catch {
+      setError("You must be logged in to add a note.");
+    }
+  };
   const renderStars = (rating) => {
     return Array.from({ length: rating }).map((_, i) => (
       <FaStar key={i} className="text-yellow-400 inline" />
@@ -177,7 +186,34 @@ const RecipeDetail = () => {
           </button>
         </form>
       </section>
-
+      <section className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4">My Notes</h2>
+        {notes.length ? (
+          <ul className="list-disc ml-6 space-y-1 mb-4">
+            {notes.map((note) => (
+              <li key={note.id} className="text-lg">
+                {note.note_text}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-400 mb-4">No notes yet.</p>
+        )}
+        <form onSubmit={handleNoteSubmit} className="mt-4 space-y-2">
+          <textarea
+            value={newNoteText}
+            onChange={(e) => setNewNoteText(e.target.value)}
+            className="w-full bg-black text-white border border-gray-600 rounded p-2"
+            placeholder="Add notes here..."
+          />
+          <button
+            type="submit"
+            className="bg-accent text-white px-4 py-2 rounded hover:bg-highlight"
+          >
+            Submit Note
+          </button>
+        </form>
+      </section>
       {/* Grocery List Toggle */}
       <div className="mb-8">
         <button
