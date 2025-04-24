@@ -1,24 +1,29 @@
+// src/pages/Recipes.jsx
+
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import RecipeCarousel from "../components/RecipeCarousel";
 import { API_BASE_URL } from "../config";
+import useAuth from "../hooks/useAuth";
 import { toggleFavorite } from "../services/recipeService";
 
 const dietaryOptions = ["vegan", "vegetarian", "keto_friendly", "nut_free"];
 
+// Derive the backend base URL by stripping "/api" from API_BASE_URL
+const BACKEND_BASE_URL = API_BASE_URL.replace(/\/api\/?$/, "");
+
 const Recipes = () => {
-  const [trending, setTrending] = useState([]);
-  const [random, setRandom] = useState([]);
-  const [dietary, setDietary] = useState([]);
-  const [favorites, setFavorites] = useState(new Set());
-  const [canMake, setCanMake] = useState([]);         // Task #54
-  const [almost, setAlmost] = useState([]);           // Task #55
-  const [diet, setDiet] = useState("");
+  const [trending, setTrending]       = useState([]);
+  const [random, setRandom]           = useState([]);
+  const [dietary, setDietary]         = useState([]);
+  const [favorites, setFavorites]     = useState(new Set());
+  const [canMake, setCanMake]         = useState([]);
+  const [almost, setAlmost]           = useState([]);
+  const [diet, setDiet]               = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
+  const { token }                     = useAuth();
 
-  const token = localStorage.getItem("token");
-
-  // Trending
+  // Trending recipes
   useEffect(() => {
     fetch(`${API_BASE_URL}/recipes/minimal/?trending=true`)
       .then((r) => r.json())
@@ -26,7 +31,7 @@ const Recipes = () => {
       .catch(console.error);
   }, []);
 
-  // Random
+  // Random recipes
   useEffect(() => {
     fetch(`${API_BASE_URL}/recipes/minimal/?random=true`)
       .then((r) => r.json())
@@ -34,40 +39,30 @@ const Recipes = () => {
       .catch(console.error);
   }, []);
 
-  // Dietary
+  // Dietary filter
   useEffect(() => {
-    if (diet) {
-      fetch(`${API_BASE_URL}/recipes/minimal/?diet=${diet}`)
-        .then((r) => r.json())
-        .then(setDietary)
-        .catch(console.error);
-    } else {
+    if (!diet) {
       setDietary([]);
+      return;
     }
+    fetch(`${API_BASE_URL}/recipes/minimal/?diet=${diet}`)
+      .then((r) => r.json())
+      .then(setDietary)
+      .catch(console.error);
   }, [diet]);
 
-  // Favorites (only if logged in)
+  // Favorites
   useEffect(() => {
     if (!token) return;
-    fetch(`${API_BASE_URL}/recipes/suggestions/?can_make=false&threshold=0`, {
-      // this is just to check auth; we actually want the dedicated favorites endpoint:
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${token}`,
-      },
+    fetch(`${API_BASE_URL}/recipes/favorites/`, {
+      headers: { Authorization: `Token ${token}` },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Not authorized");
-        return fetch(`${API_BASE_URL}/recipes/favorites/`, {
-          headers: {
-            Authorization: `Token ${token}`,
-          },
-        });
+      .then((r) => {
+        if (!r.ok) throw new Error("Not authorized");
+        return r.json();
       })
-      .then((r) => r.json())
       .then((data) => setFavorites(new Set(data.map((r) => r.id))))
-      .catch((err) => console.error("Failed to fetch favorites:", err));
+      .catch(console.error);
   }, [token]);
 
   // Suggestions: can_make=true
@@ -77,18 +72,38 @@ const Recipes = () => {
       headers: { Authorization: `Token ${token}` },
     })
       .then((r) => r.json())
-      .then(setCanMake)
+      .then((data) =>
+        setCanMake(
+          data.map((recipe) => ({
+            ...recipe,
+            image:
+              recipe.image && recipe.image.startsWith("/media")
+                ? `${BACKEND_BASE_URL}${recipe.image}`
+                : recipe.image,
+          }))
+        )
+      )
       .catch(console.error);
   }, [token]);
 
-  // Suggestions: threshold=2 (“Almost There”)
+  // Suggestions: threshold=2
   useEffect(() => {
     if (!token) return;
     fetch(`${API_BASE_URL}/recipes/suggestions/?threshold=2`, {
       headers: { Authorization: `Token ${token}` },
     })
       .then((r) => r.json())
-      .then(setAlmost)
+      .then((data) =>
+        setAlmost(
+          data.map((recipe) => ({
+            ...recipe,
+            image:
+              recipe.image && recipe.image.startsWith("/media")
+                ? `${BACKEND_BASE_URL}${recipe.image}`
+                : recipe.image,
+          }))
+        )
+      )
       .catch(console.error);
   }, [token]);
 
@@ -103,8 +118,7 @@ const Recipes = () => {
       await toggleFavorite(recipeId);
       setFavorites((prev) => {
         const next = new Set(prev);
-        if (next.has(recipeId)) next.delete(recipeId);
-        else next.add(recipeId);
+        next.has(recipeId) ? next.delete(recipeId) : next.add(recipeId);
         return next;
       });
     } catch (err) {
@@ -116,6 +130,7 @@ const Recipes = () => {
     <div className="container mx-auto px-6 py-8 text-gray-100">
       <h1 className="text-4xl font-bold text-primary mb-6">Explore Recipes</h1>
 
+      {/* Diet filter */}
       <div className="mb-6 flex gap-4 items-center">
         <label className="text-lg">Filter by Diet:</label>
         <select
@@ -132,6 +147,7 @@ const Recipes = () => {
         </select>
       </div>
 
+      {/* You Can Make */}
       {token && canMake.length > 0 && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">You Can Make</h2>
@@ -143,6 +159,7 @@ const Recipes = () => {
         </section>
       )}
 
+      {/* Almost There */}
       {token && almost.length > 0 && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">
@@ -156,6 +173,7 @@ const Recipes = () => {
         </section>
       )}
 
+      {/* Trending */}
       <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Trending Recipes</h2>
         <RecipeCarousel
@@ -173,6 +191,7 @@ const Recipes = () => {
         </div>
       </section>
 
+      {/* Random */}
       {random.length > 0 && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Random Recipes</h2>
@@ -192,10 +211,13 @@ const Recipes = () => {
         </section>
       )}
 
+      {/* Dietary */}
       {diet && dietary.length > 0 && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">
-            {diet.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}{" "}
+            {diet
+              .replace("_", " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase())}{" "}
             Recipes
           </h2>
           <RecipeCarousel
@@ -214,12 +236,14 @@ const Recipes = () => {
         </section>
       )}
 
+      {/* Favorites */}
       {token && favorites.size > 0 && (
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Your Favorites</h2>
           <RecipeCarousel
-            recipes={[...trending, ...random, ...dietary]
-              .filter((r) => favorites.has(r.id))}
+            recipes={[...trending, ...random, ...dietary].filter((r) =>
+              favorites.has(r.id)
+            )}
             onToggleFavorite={handleToggleFavorite}
             favorites={favorites}
           />
