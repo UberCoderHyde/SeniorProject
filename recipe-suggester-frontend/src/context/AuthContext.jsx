@@ -1,10 +1,11 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 
 export const AuthContext = createContext({
   user: null,
   token: null,
   login: () => {},
   logout: () => {},
+  setUser: () => {},
 });
 
 export const AuthProvider = ({ children }) => {
@@ -38,8 +39,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+export function useAuth() {
+  return useContext(AuthContext);
+}

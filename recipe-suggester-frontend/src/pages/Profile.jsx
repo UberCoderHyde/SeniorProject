@@ -1,31 +1,37 @@
 // src/components/Profile.jsx
+
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import useAuth from "../hooks/useAuth";
-import {
-  fetchPantryItems,
-  fetchTrendingIngredients,
-} from "../services/ingredientService";
 
-// configure base URL if needed, and allow sending cookies
-axios.defaults.baseURL = "http://localhost:8000/api";
-axios.defaults.withCredentials = true;
+// — Axios global configuration —
+axios.defaults.baseURL        = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+axios.defaults.withCredentials = false;  // we're using Token auth, not cookies
 
 const Profile = () => {
-  const { user, setUser } = useAuth();
-  const [pantryItems, setPantryItems] = useState([]);
+  const { user, token, setUser } = useAuth();
+  const [pantryItems, setPantryItems]             = useState([]);
   const [trendingIngredients, setTrendingIngredients] = useState([]);
-  const [loadingPantry, setLoadingPantry] = useState(true);
-  const [loadingTrending, setLoadingTrending] = useState(true);
-  const [error, setError] = useState("");
-  const [uploadError, setUploadError] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef();
+  const [loadingPantry, setLoadingPantry]         = useState(true);
+  const [loadingTrending, setLoadingTrending]     = useState(true);
+  const [error, setError]                         = useState("");
+  const [uploadError, setUploadError]             = useState("");
+  const [uploading, setUploading]                 = useState(false);
+  const fileInputRef                              = useRef();
 
-  // open file picker
+  // Automatically attach the token to all axios requests
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Token ${token}`;
+    } else {
+      delete axios.defaults.headers.common["Authorization"];
+    }
+  }, [token]);
+
+  // Open the hidden file input
   const handleClick = () => fileInputRef.current.click();
 
-  // handle profile picture upload
+  // Handle profile-picture upload
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -37,12 +43,13 @@ const Profile = () => {
     formData.append("profile_picture", file);
 
     try {
+      // PATCH to /api/users/profile/
       const { data } = await axios.patch(
-        "/user/profile/",
+        "/users/profile/",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
-      // if your API returns { user: {...} }, do setUser(data.user)
+      // Update context with the new user data
       setUser(data);
     } catch (err) {
       console.error("Upload failed:", err);
@@ -52,12 +59,12 @@ const Profile = () => {
     }
   };
 
-  // load pantry items
+  // Fetch pantry items
   useEffect(() => {
     const loadPantry = async () => {
       try {
-        const data = await fetchPantryItems();
-        setPantryItems(data);
+        const resp = await axios.get("/pantry");
+        setPantryItems(resp.data);
       } catch (err) {
         console.error("Error fetching pantry items:", err);
         setError("Failed to load pantry items.");
@@ -69,12 +76,12 @@ const Profile = () => {
     else setLoadingPantry(false);
   }, [user]);
 
-  // load trending ingredients
+  // Fetch trending ingredients
   useEffect(() => {
     const loadTrending = async () => {
       try {
-        const data = await fetchTrendingIngredients();
-        setTrendingIngredients(data);
+        const resp = await axios.get("/ingredients/trending/");
+        setTrendingIngredients(resp.data);
       } catch (err) {
         console.error("Error fetching trending ingredients:", err);
       } finally {
@@ -96,7 +103,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-black text-gray-300 p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Profile header */}
+        {/* Profile Header */}
         <div className="flex items-center space-x-4 mb-6">
           {user.profile_picture ? (
             <img
@@ -148,10 +155,7 @@ const Profile = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {pantryItems.map((item) => (
-              <div
-                key={item.id}
-                className="border p-4 rounded bg-gray-800"
-              >
+              <div key={item.id} className="border p-4 rounded bg-gray-800">
                 <h3 className="font-bold text-lg">
                   {item.ingredient.name}
                 </h3>

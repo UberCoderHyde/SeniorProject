@@ -6,6 +6,5 @@ urlpatterns = [
     path('register/', RegisterUserView.as_view(), name='register'),
     path('profile/', user_profile, name='user-profile'),
     path('unsubscribe/', unsubscribe, name='unsubscribe'),
-    path('profile/', UserProfileView.as_view(), name='user-profile'),
 
 ]
