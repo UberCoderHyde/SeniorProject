@@ -105,3 +105,4 @@ class Review(models.Model):
     review_text = models.TextField(default="No review provided")
     rating = models.IntegerField(choices=[(i, f"{i} star") for i in range(1, 6)])
     timestamp = models.DateTimeField(auto_now_add=True)
+

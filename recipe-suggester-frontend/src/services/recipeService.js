@@ -26,6 +26,33 @@ export const fetchRecipeById = async (id) => {
     throw error;
   }
 };
+export const fetchNotes = async (id) => {
+  const res = await fetch(
+    `${API_BASE_URL}/recipes/${id}/notes/`,
+    { headers: getAuthHeaders() }
+  );
+  if (!res.ok) throw new Error("Failed to load notes");
+  return res.json();
+};
+
+/**
+ * Create a new note on a recipe.
+ */
+export const createNote = async (recipeId, noteText) => {
+  const res = await fetch(
+    `${API_BASE_URL}/recipes/${recipeId}/notes/`,
+    {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ note_text: noteText }),
+    }
+  );
+  if (!res.ok) throw new Error("Failed to create note");
+  return res.json();
+};
 export const fetchIngredients = async () => {
   const response = await fetch(`${API_BASE_URL}/ingredients/`, {
     headers: getAuthHeaders(),
