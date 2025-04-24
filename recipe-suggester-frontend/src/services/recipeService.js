@@ -12,55 +12,65 @@ export const getAuthHeaders = () => {
         "Content-Type": "application/json",
       };
 };
+
 export const fetchRecipeById = async (id) => {
   try {
     const response = await fetch(`${API_BASE_URL}/recipes/${id}/`, {
       headers: getAuthHeaders(),
     });
-    if (!response.ok) {
-      throw new Error("Failed to fetch recipe");
-    }
+    if (!response.ok) throw new Error("Failed to fetch recipe");
     return await response.json();
   } catch (error) {
-    console.error(error);
+    console.error("Error in fetchRecipeById:", error);
     throw error;
   }
 };
-export const fetchNotes = async (id) => {
-  const res = await fetch(
-    `${API_BASE_URL}/recipes/${id}/notes/`,
-    { headers: getAuthHeaders() }
-  );
-  if (!res.ok) throw new Error("Failed to load notes");
-  return res.json();
+
+export const fetchNotes = async (recipeId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/notes/`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.detail || "Failed to load notes");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error in fetchNotes:", error);
+    throw error;
+  }
 };
 
-/**
- * Create a new note on a recipe.
- */
 export const createNote = async (recipeId, noteText) => {
-  const res = await fetch(
-    `${API_BASE_URL}/recipes/${recipeId}/notes/`,
-    {
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/notes/`, {
       method: "POST",
-      headers: {
-        ...getAuthHeaders(),
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ note_text: noteText }),
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ content: noteText }),
+    });
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.detail || "Failed to create note");
     }
-  );
-  if (!res.ok) throw new Error("Failed to create note");
-  return res.json();
-};
-export const fetchIngredients = async () => {
-  const response = await fetch(`${API_BASE_URL}/ingredients/`, {
-    headers: getAuthHeaders(),
-  });
-  if (!response.ok) {
-    throw new Error("Failed to fetch ingredients");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createNote:", error);
+    throw error;
   }
-  return await response.json();
+};
+
+export const fetchIngredients = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ingredients/`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to fetch ingredients");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in fetchIngredients:", error);
+    throw error;
+  }
 };
 
 export const fetchRecipes = async () => {
@@ -68,25 +78,20 @@ export const fetchRecipes = async () => {
     const response = await fetch(`${API_BASE_URL}/recipes/`, {
       headers: getAuthHeaders(),
     });
-    if (!response.ok) {
-      throw new Error("Failed to fetch recipes");
-    }
+    if (!response.ok) throw new Error("Failed to fetch recipes");
     return await response.json();
   } catch (error) {
-    console.error(error);
+    console.error("Error in fetchRecipes:", error);
     throw error;
   }
 };
-
 
 export const fetchPantryItems = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/pantry/`, {
       headers: getAuthHeaders(),
     });
-    if (!response.ok) {
-      throw new Error("Failed to fetch pantry items");
-    }
+    if (!response.ok) throw new Error("Failed to fetch pantry items");
     return await response.json();
   } catch (error) {
     console.error("Error in fetchPantryItems:", error);
@@ -101,9 +106,7 @@ export const addPantryItem = async ({ ingredient_id, quantity }) => {
       headers: getAuthHeaders(),
       body: JSON.stringify({ ingredient_id, quantity }),
     });
-    if (!response.ok) {
-      throw new Error("Failed to add pantry item");
-    }
+    if (!response.ok) throw new Error("Failed to add pantry item");
     return await response.json();
   } catch (error) {
     console.error("Error in addPantryItem:", error);
@@ -113,45 +116,53 @@ export const addPantryItem = async ({ ingredient_id, quantity }) => {
 
 export const fetchPaginatedRecipes = async ({ diet, favorite, random, sort, page = 1 }) => {
   const params = new URLSearchParams();
-
   if (diet) params.append("diet", diet);
   if (favorite) params.append("favorite", "true");
   if (random) params.append("random", "true");
   if (sort) params.append("sort", sort);
   params.append("page", page);
 
-  const response = await fetch(`${API_BASE_URL}/recipes/browse/?${params.toString()}`, {
-    headers: getAuthHeaders(),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch paginated recipes");
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/browse/?${params.toString()}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to fetch paginated recipes");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in fetchPaginatedRecipes:", error);
+    throw error;
   }
-
-  return await response.json();
 };
+
 export const toggleFavorite = async (recipeId) => {
   const token = localStorage.getItem("token");
-  const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/toggle-favorite/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Token ${token}` }),
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to toggle favorite");
+  try {
+    const response = await fetch(`${API_BASE_URL}/recipes/${recipeId}/toggle-favorite/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Token ${token}` }),
+      },
+    });
+    if (!response.ok) throw new Error("Failed to toggle favorite");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in toggleFavorite:", error);
+    throw error;
   }
-
-  return response.json();
 };
-export const fetchGroceryList = async (recipeIds=[]) => {
+
+export const fetchGroceryList = async (recipeIds = []) => {
   if (!recipeIds.length) return [];
   const qs = recipeIds.join(",");
-  const res = await fetch(`${API_BASE_URL}/grocery-list/?recipes=${qs}`, {
-    headers: getAuthHeaders()
-  });
-  if (!res.ok) throw new Error("Failed to fetch grocery list");
-  return await res.json();  // array of { id, name, ... }
+  try {
+    const response = await fetch(`${API_BASE_URL}/grocery-list/?recipes=${qs}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) throw new Error("Failed to fetch grocery list");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in fetchGroceryList:", error);
+    throw error;
+  }
 };

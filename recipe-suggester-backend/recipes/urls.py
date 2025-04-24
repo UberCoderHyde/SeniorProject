@@ -20,6 +20,5 @@ urlpatterns = [
     path('ingredients/trending/', TrendingIngredientsView.as_view(), name='trending-ingredients'),
     path('grocery-list/',GroceryListView.as_view(),name='grocery-list'),
     path("recipes/create/", CreateRecipeView.as_view(), name="recipe-create"),
-    path("recipes/<int:pk>/note/", NoteDetailCRUD.as_view(),name="note_detail"),
-    
+    path("recipes/<int:pk>/notes/", NoteDetailCRUD.as_view(), name="note_list_create")    
 ]

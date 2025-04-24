@@ -1,75 +1,95 @@
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
+# recipes/tests.py
+from django.urls import reverse
 from rest_framework import status
-from recipes.models import Recipe, Ingredient
-import re
+from rest_framework.test import APITestCase
+from django.contrib.auth import get_user_model
+from recipes.models import Recipe, Ingredient, PantryItem
+from unittest.mock import patch, PropertyMock
+
 User = get_user_model()
 
-class RecipeViewsTest(TestCase):
+
+class SuggestRecipesViewTests(APITestCase):
     def setUp(self):
-        self.client = APIClient()
-        self.user = User.objects.create_user(username='testuser', password='pass1234')
-        self.client.force_authenticate(user=self.user)
+        self.user = User.objects.create_user(
+            username="tester", email="t@test.com", password="pass"
+        )
+        self.client.force_authenticate(self.user)
 
-        # Sample ingredients and recipes
-        ing1 = Ingredient.objects.create(name='Carrot')
-        ing2 = Ingredient.objects.create(name='Beef', is_meat=True)
+        # Ingredients
+        self.ing_a = Ingredient.objects.create(name="A")
+        self.ing_b = Ingredient.objects.create(name="B")
+        self.ing_c = Ingredient.objects.create(name="C")
 
-        self.recipe1 = Recipe.objects.create(title="Vegan Delight", instructions="Chop and mix", recipeIngred="Carrot\nWater")
-        self.recipe2 = Recipe.objects.create(title="Beef Stew", instructions="Cook beef", recipeIngred="Beef\nSalt")
-        self.recipe1.save()
-        self.recipe2.save()
-        self.user.favorite_recipes.add(self.recipe1)
+        # Create recipes
+        self.r1 = Recipe.objects.create(title="R1", instructions="", recipeIngred="")
+        self.r2 = Recipe.objects.create(title="R2", instructions="", recipeIngred="")
 
-    def test_get_minimal_recipes(self):
-        res = self.client.get('/api/recipes/minimal/')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(res.data), 1)
+        # Pantry: user only has A
+        PantryItem.objects.create(user=self.user, ingredient=self.ing_a)
 
-    def test_random_recipes(self):
-        res = self.client.get('/api/recipes/minimal/?random=true')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+    def test_missing_counts(self):
+        url = reverse("recipe-suggestions")
 
-    def test_dietary_filter_vegetarian(self):
-        res = self.client.get('/api/recipes/minimal/?diet=vegetarian')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        with patch.object(Recipe, "cleaned_ingredients", new_callable=PropertyMock) as mock_cleaned:
+            mock_cleaned.side_effect = [
+                [self.ing_a, self.ing_b],  # R1
+                [self.ing_b, self.ing_c],  # R2
+            ]
+            resp = self.client.get(url)
+            self.assertEqual(resp.status_code, status.HTTP_200_OK)
+            data = resp.json()
+            self.assertEqual(data[0]["title"], "R1")
+            self.assertEqual(data[0]["missing_count"], 1)
+            self.assertEqual(data[1]["title"], "R2")
+            self.assertEqual(data[1]["missing_count"], 2)
 
-    def test_trending_recipes(self):
-        res = self.client.get('/api/recipes/minimal/?trending=true')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
+    def test_can_make_filter(self):
+        url = reverse("recipe-suggestions") + "?can_make=true"
 
-    def test_favorite_recipes(self):
-        res = self.client.get('/api/recipes/minimal/?favorite=true')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 1)
+        with patch.object(Recipe, "cleaned_ingredients", new_callable=PropertyMock) as mock_cleaned:
+            mock_cleaned.side_effect = [
+                [self.ing_a, self.ing_b],  # R1 → missing B
+                [self.ing_b, self.ing_c],  # R2 → missing B,C
+            ]
+            resp = self.client.get(url)
+            self.assertEqual(resp.json(), [])  # nothing can be made
 
-    def test_paginated_view_limit(self):
-        for i in range(60):
-            Recipe.objects.create(title=f"Paginated Recipe {i}", instructions="Test")
-        res = self.client.get('/api/recipes/paginated/?page=1')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertLessEqual(len(res.data['results']), 50)
+    def test_threshold_filter(self):
+        url = reverse("recipe-suggestions") + "?threshold=1"
 
-    def test_empty_state_on_invalid_diet(self):
-        res = self.client.get('/api/recipes/minimal/?diet=nonexistentdiet')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 0)
+        with patch.object(Recipe, "cleaned_ingredients", new_callable=PropertyMock) as mock_cleaned:
+            mock_cleaned.side_effect = [
+                [self.ing_a, self.ing_b],  # R1 → 1 missing
+                [self.ing_b, self.ing_c],  # R2 → 2 missing
+            ]
+            resp = self.client.get(url)
+            data = resp.json()
+            self.assertEqual(len(data), 1)
+            self.assertEqual(data[0]["title"], "R1")
 
-    def test_empty_state_on_favorite_no_data(self):
-        self.user.favorite_recipes.clear()
-        res = self.client.get('/api/recipes/minimal/?favorite=true')
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 0)
 
-    def test_cache_random(self):
-        res1 = self.client.get('/api/recipes/minimal/?random=true')
-        res2 = self.client.get('/api/recipes/minimal/?random=true')
-        self.assertEqual(res1.status_code, 200)
-        self.assertEqual(res2.status_code, 200)
+class CreateRecipeViewTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="creator", email="c@test.com", password="pass"
+        )
+        self.client.force_authenticate(self.user)
+        self.url = reverse("recipe-create")
 
-    def test_cache_trending(self):
-        res1 = self.client.get('/api/recipes/minimal/?trending=true')
-        res2 = self.client.get('/api/recipes/minimal/?trending=true')
-        self.assertEqual(res1.status_code, 200)
-        self.assertEqual(res2.status_code, 200)
+    def test_requires_auth(self):
+        self.client.force_authenticate(user=None)
+        resp = self.client.post(self.url, {})
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_recipe_success(self):
+        payload = {
+            "title": "New",
+            "recipeIngred": "A\nB",
+            "instructions": "Do this\nThen that"
+        }
+        resp = self.client.post(self.url, payload, format="multipart")
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.json()["data"]
+        self.assertEqual(data["title"], "New")
+        self.assertIn("id", data)

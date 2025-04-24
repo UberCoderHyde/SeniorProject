@@ -1,7 +1,12 @@
 // src/pages/RecipeDetail.jsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { fetchRecipeById, getAuthHeaders } from "../services/recipeService";
+import {
+  fetchRecipeById,
+  getAuthHeaders,
+  createNote,
+  fetchNotes,
+} from "../services/recipeService";
 import { FaStar } from "react-icons/fa";
 import { API_BASE_URL } from "../config";
 import GroceryList from "../components/GroceryList";
@@ -10,7 +15,9 @@ const RecipeDetail = () => {
   const { id } = useParams();
   const [recipe, setRecipe] = useState(null);
   const [reviews, setReviews] = useState([]);
+  const [notes, setNotes] = useState([]);
   const [newReview, setNewReview] = useState({ rating: 5, review_text: "" });
+  const [newNoteText, setNewNoteText] = useState("");
   const [error, setError] = useState(null);
   const [showList, setShowList] = useState(false);
 
@@ -20,11 +27,14 @@ const RecipeDetail = () => {
         const data = await fetchRecipeById(id);
         setRecipe(data);
 
-        const res = await fetch(`${API_BASE_URL}/recipes/${id}/reviews/`, {
+        const reviewRes = await fetch(`${API_BASE_URL}/recipes/${id}/reviews/`, {
           headers: getAuthHeaders(),
         });
-        const revs = await res.json();
-        setReviews(revs);
+        const reviewData = await reviewRes.json();
+        setReviews(reviewData);
+
+        const noteData = await fetchNotes(id);
+        setNotes(noteData);
       } catch (err) {
         console.error(err);
         setError("Failed to fetch recipe details.");
@@ -49,16 +59,19 @@ const RecipeDetail = () => {
       setError("You must be logged in to submit a review.");
     }
   };
+
   const handleNoteSubmit = async (e) => {
     e.preventDefault();
     try {
       const created = await createNote(id, newNoteText);
       setNotes((prev) => [...prev, created]);
       setNewNoteText("");
-    } catch {
-      setError("You must be logged in to add a note.");
+    } catch (err) {
+      setError(err.message || "Failed to add note.");
     }
   };
+  
+
   const renderStars = (rating) => {
     return Array.from({ length: rating }).map((_, i) => (
       <FaStar key={i} className="text-yellow-400 inline" />
@@ -70,7 +83,6 @@ const RecipeDetail = () => {
 
   const { title, image, instructions, recipeIngred } = recipe;
 
-  // Parse ingredients list
   let ingredientsArray = [];
   if (Array.isArray(recipeIngred)) {
     ingredientsArray = recipeIngred;
@@ -85,7 +97,6 @@ const RecipeDetail = () => {
     }
   }
 
-  // Parse instruction steps
   const steps = instructions
     ? instructions.split("\n").filter((s) => s.trim())
     : [];
@@ -186,35 +197,39 @@ const RecipeDetail = () => {
           </button>
         </form>
       </section>
-      <section className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">My Notes</h2>
-        {notes.length ? (
-          <ul className="list-disc ml-6 space-y-1 mb-4">
-            {notes.map((note) => (
-              <li key={note.id} className="text-lg">
-                {note.note_text}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-gray-400 mb-4">No notes yet.</p>
-        )}
-        <form onSubmit={handleNoteSubmit} className="mt-4 space-y-2">
-          <textarea
-            value={newNoteText}
-            onChange={(e) => setNewNoteText(e.target.value)}
-            className="w-full bg-black text-white border border-gray-600 rounded p-2"
-            placeholder="Add notes here..."
-          />
-          <button
-            type="submit"
-            className="bg-accent text-white px-4 py-2 rounded hover:bg-highlight"
-          >
-            Submit Note
-          </button>
-        </form>
-      </section>
-      {/* Grocery List Toggle */}
+
+  {/* Notes */}
+  <section className="mb-8">
+    <h2 className="text-2xl font-semibold mb-4">My Notes</h2>
+    {notes.length ? (
+      <ul className="list-disc ml-6 space-y-1 mb-4">
+        {notes.map((note) => (
+          <li key={note.id} className="text-lg">
+            {note.content}
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p className="text-gray-400 mb-4">No notes yet.</p>
+    )}
+    <form onSubmit={handleNoteSubmit} className="mt-4 space-y-2">
+      <textarea
+        value={newNoteText}
+        onChange={(e) => setNewNoteText(e.target.value)}
+        className="w-full bg-black text-white border border-gray-600 rounded p-2"
+        placeholder="Add notes here..."
+      />
+      <button
+        type="submit"
+        className="bg-accent text-white px-4 py-2 rounded hover:bg-highlight"
+      >
+        Submit Note
+      </button>
+    </form>
+  </section>
+
+
+      {/* Grocery List */}
       <div className="mb-8">
         <button
           onClick={() => setShowList((s) => !s)}
@@ -224,7 +239,6 @@ const RecipeDetail = () => {
         </button>
       </div>
 
-      {/* Embedded Grocery List */}
       {showList && (
         <section className="mb-8">
           <GroceryList recipeIds={[parseInt(id, 10)]} />

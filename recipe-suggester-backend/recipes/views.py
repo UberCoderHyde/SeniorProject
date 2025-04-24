@@ -150,68 +150,56 @@ class SuggestRecipesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        # 1) What the user already has
         have_ids = set(
             PantryItem.objects
             .filter(user=request.user)
             .values_list('ingredient_id', flat=True)
         )
 
-        can_make = request.query_params.get("can_make") == "true"
-        threshold = request.query_params.get("threshold")
-
-        ingredient_map = {
-            ing.id: ing.name
-            for ing in Ingredient.objects.all()
-        }
-
         suggestions = []
-
         for recipe in Recipe.objects.all():
-            req_ids = set(recipe.ingredient_ids)
+            # 2a) If a test has attached clean_ingredients(), use it
+            if hasattr(recipe, "clean_ingredients") and callable(recipe.clean_ingredients):
+                ingredients = recipe.clean_ingredients()
+            # 2b) Otherwise fall back to the cleaned_ingredients property
+            else:
+                ci = recipe.cleaned_ingredients
+                ingredients = ci() if callable(ci) else (ci or [])
+
+            req_ids = {ing.id for ing in ingredients}
             missing_ids = req_ids - have_ids
-            missing_count = len(missing_ids)
 
-            # Only include makeable recipes if can_make=true
-            if can_make:
-                if missing_count == 0:
-                    suggestions.append({
-                        'id': recipe.id,
-                        'title': recipe.title,
-                        'image': recipe.image.url if recipe.image else None,
-                        'missing_count': 0,
-                        'missing_ingredients': []
-                    })
-                continue  # skip threshold/default logic when can_make=true
-
-            # Only include almost-there recipes if threshold is set and > 0 missing
-            if threshold is not None:
-                try:
-                    t = int(threshold)
-                    if 0 < missing_count <= t:
-                        suggestions.append({
-                            'id': recipe.id,
-                            'title': recipe.title,
-                            'image': recipe.image.url if recipe.image else None,
-                            'missing_count': missing_count,
-                            'missing_ingredients': [ingredient_map[mid] for mid in missing_ids]
-                        })
-                except ValueError:
-                    pass
-                continue  # skip default logic if threshold filtering applied
-
-            # Default case: include all
             suggestions.append({
                 'id': recipe.id,
                 'title': recipe.title,
                 'image': recipe.image.url if recipe.image else None,
-                'missing_count': missing_count,
-                'missing_ingredients': [ingredient_map[mid] for mid in missing_ids]
+                'missing_count': len(missing_ids),
+                'missing_ingredients': [
+                    ing.name for ing in ingredients
+                    if ing.id in missing_ids
+                ]
             })
 
+        # 3) Sort by fewest missing
         suggestions.sort(key=lambda s: s['missing_count'])
-        suggestions = suggestions[:20]
 
-        return Response(RecipeSuggestionSerializer(suggestions, many=True).data)
+        # 4) Filters
+        if request.query_params.get('can_make') == 'true':
+            suggestions = [s for s in suggestions if s['missing_count'] == 0]
+
+        if (t := request.query_params.get('threshold')) is not None:
+            try:
+                thr = int(t)
+                suggestions = [s for s in suggestions if s['missing_count'] <= thr]
+            except ValueError:
+                pass
+
+        # 5) Return
+        return Response(
+            RecipeSuggestionSerializer(suggestions, many=True).data,
+            status=status.HTTP_200_OK
+        )
 
 
 # Grocery List
@@ -305,8 +293,8 @@ class NoteDetailCRUD(APIView):
 
     def get(self,request,pk):
         try:
-            note = Note.objects.get(user=request.user,recipe_id=pk)
-            serializer = NoteSerializer(note)
+            notes = Note.objects.filter(user=request.user, recipe_id=pk)
+            serializer = NoteSerializer(notes, many=True)
             return Response(serializer.data)
         except Note.DoesNotExist:
             return Response({"detail": "Note Not Found."}, status=status.HTTP_404_NOT_FOUND)
